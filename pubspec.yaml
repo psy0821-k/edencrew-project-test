@@ -41,6 +41,7 @@ dependencies:
   http: ^1.2.2
   # 날짜/숫자 포맷 (일별 시세 날짜, 천 단위 콤마)
   intl: ^0.19.0
+  html: ^0.15.7
 
 dev_dependencies:
   flutter_test:
