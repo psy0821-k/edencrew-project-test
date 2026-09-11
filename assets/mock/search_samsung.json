@@ -1,0 +1,41 @@
+{
+  "query": "삼성전자",
+  "items": [
+    {
+      "code": "005930",
+      "name": "삼성전자",
+      "typeCode": "KOSPI",
+      "typeName": "코스피",
+      "url": "/domestic/stock/005930/total",
+      "reutersCode": "005930",
+      "nationCode": "KOR",
+      "nationName": "대한민국",
+      "category": "stock",
+      "hasDiscussion": true
+    },
+    {
+      "code": "0162Z0",
+      "name": "RISE 삼성전자SK하이닉스채권혼합50",
+      "typeCode": "KOSPI",
+      "typeName": "코스피",
+      "url": "/domestic/stock/0162Z0/total",
+      "reutersCode": "0162Z0",
+      "nationCode": "KOR",
+      "nationName": "대한민국",
+      "category": "stock",
+      "hasDiscussion": true
+    },
+    {
+      "code": "448330",
+      "name": "KODEX 삼성전자채권혼합",
+      "typeCode": "KOSPI",
+      "typeName": "코스피",
+      "url": "/domestic/stock/448330/total",
+      "reutersCode": "448330",
+      "nationCode": "KOR",
+      "nationName": "대한민국",
+      "category": "stock",
+      "hasDiscussion": true
+    }
+  ]
+}
