@@ -36,16 +36,19 @@ void main() {
       expect(repository, isA<MockQuoteRepository>());
     });
 
-    test('전역 모드가 network여도 quoteRepositoryProvider를 개별 override하면 그 값이 우선한다', () {
-      final fake = _FakeQuoteRepository();
-      final container = ProviderContainer(
-        overrides: [quoteRepositoryProvider.overrideWithValue(fake)],
-      );
-      addTearDown(container.dispose);
+    test(
+      '전역 모드가 network여도 quoteRepositoryProvider를 개별 override하면 그 값이 우선한다',
+      () {
+        final fake = _FakeQuoteRepository();
+        final container = ProviderContainer(
+          overrides: [quoteRepositoryProvider.overrideWithValue(fake)],
+        );
+        addTearDown(container.dispose);
 
-      final repository = container.read(quoteRepositoryProvider);
+        final repository = container.read(quoteRepositoryProvider);
 
-      expect(repository, same(fake));
-    });
+        expect(repository, same(fake));
+      },
+    );
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../shared/api/api_client.dart';
 import '../../shared/error/failure.dart';
 import 'quote.dart';
@@ -5,9 +7,6 @@ import 'quote_repository.dart';
 
 /// Naver 실시간 시세 API(`polling.finance.naver.com/api/realtime`)를 호출하는
 /// 구현체입니다.
-///
-/// Phase 0에서는 [ApiClient]를 통한 요청·에러 변환 구조만 검증하고, 실제
-/// 응답 필드 파싱(`nv`, `pcv` 등)은 Phase 1에서 구현합니다.
 class NetworkQuoteRepository implements QuoteRepository {
   NetworkQuoteRepository(this._apiClient);
 
@@ -28,16 +27,73 @@ class NetworkQuoteRepository implements QuoteRepository {
 
     try {
       final response = await _apiClient.get(uri);
-      // TODO(Phase 1): 응답 JSON의 cd/nv/pcv 필드를 파싱해 Quote로 변환한다.
-      // 지금은 Phase 0 스켈레톤이므로 파싱하지 않고 빈 맵을 반환한다.
       if (response.body.isEmpty) {
         throw const EmptyResultFailure();
       }
-      return {};
+
+      final Map<String, dynamic> json;
+      try {
+        json = jsonDecode(response.body) as Map<String, dynamic>;
+      } catch (_) {
+        throw const ParsingFailure();
+      }
+
+      final areas =
+          (json['result'] as Map<String, dynamic>?)?['areas'] as List?;
+      final datas = areas?.isNotEmpty == true
+          ? (areas!.first as Map<String, dynamic>)['datas'] as List?
+          : null;
+      if (datas == null) {
+        throw const ParsingFailure();
+      }
+      if (datas.isEmpty) {
+        throw const EmptyResultFailure();
+      }
+
+      return {
+        for (final item in datas)
+          ...() {
+            final quote = _parseQuote(item as Map<String, dynamic>);
+            return {quote.symbol: quote};
+          }(),
+      };
     } on Failure {
       rethrow;
     } catch (e) {
       throw NetworkFailure('$e');
     }
+  }
+
+  Quote _parseQuote(Map<String, dynamic> item) {
+    final symbol = item['cd'];
+    final currentPrice = item['nv'];
+    final previousClose = item['pcv'];
+    final open = item['ov'];
+    final high = item['hv'];
+    final low = item['lv'];
+    final volume = item['aq'];
+    final countOfListedStock = item['countOfListedStock'];
+
+    if (symbol is! String ||
+        currentPrice is! int ||
+        previousClose is! int ||
+        open is! int ||
+        high is! int ||
+        low is! int ||
+        volume is! int ||
+        countOfListedStock is! int) {
+      throw const ParsingFailure();
+    }
+
+    return Quote(
+      symbol: symbol,
+      currentPrice: currentPrice,
+      previousClose: previousClose,
+      open: open,
+      high: high,
+      low: low,
+      volume: volume,
+      countOfListedStock: countOfListedStock,
+    );
   }
 }

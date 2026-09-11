@@ -22,7 +22,7 @@ final quoteRepositoryProvider = Provider<QuoteRepository>((ref) {
   return switch (ref.watch(dataSourceModeProvider)) {
     DataSourceMode.mock => MockQuoteRepository(),
     DataSourceMode.network => NetworkQuoteRepository(
-        ref.watch(apiClientProvider),
-      ),
+      ref.watch(apiClientProvider),
+    ),
   };
 });
