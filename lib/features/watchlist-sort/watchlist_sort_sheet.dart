@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../theme/theme.dart';
 import 'sort_criteria.dart';
@@ -129,7 +130,13 @@ class _SortOptionTile extends StatelessWidget {
                 color: color,
               ),
             ),
-            if (selected) Icon(Icons.check, color: color),
+            if (selected)
+              SvgPicture.asset(
+                'assets/icons/ico_check.svg',
+                width: 20,
+                height: 20,
+                colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+              ),
           ],
         ),
       ),
