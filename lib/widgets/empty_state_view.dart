@@ -55,7 +55,7 @@ class EmptyStateView extends StatelessWidget {
               fontSize: _titleFontSize,
               height: _titleLineHeight / _titleFontSize,
               letterSpacing: _titleLetterSpacing,
-              color: colors.textPrimary,
+              color: colors.textSecondary,
             ),
           ),
           const SizedBox(height: _gap),
