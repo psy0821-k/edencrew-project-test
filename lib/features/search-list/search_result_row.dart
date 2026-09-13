@@ -12,10 +12,9 @@ const double _nameLineHeight = 20;
 const double _nameLetterSpacing = -0.1;
 const double _metaFontSize = 11;
 const double _metaLineHeight = 14;
-const double _rowVerticalPadding = 12;
-const double _rowHorizontalPadding = 16;
-const double _starIconSize = 20;
-const double _starGap = 8;
+// Figma 실측 높이는 60px이지만, 고정값으로 두면 접근성 폰트 확대 시
+// RenderFlex overflow가 발생한다(실기기 확인됨). WatchlistRow와 동일하게
+// dimens.rowMinHeight(56)를 최소값으로만 강제해 폰트가 커지면 행이 자연스럽게 늘어나게 한다.
 
 /// 검색 결과 행 하나. 종목명(검색어 일치 구간 하이라이트) + 종목코드 · 시장 + 별 아이콘 표시.
 /// 행 전체 탭 인터랙션(상세 이동)은 이후 이슈(#35)에서 추가.
@@ -39,6 +38,7 @@ class SearchResultRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final dimens = context.dimens;
     final isFavorite = ref.watch(isFavoriteProvider(result.symbol));
     final baseStyle = TextStyle(
       fontFamily: AppTypography.fontFamily,
@@ -49,12 +49,22 @@ class SearchResultRow extends ConsumerWidget {
       color: colors.textPrimary,
     );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: _rowVerticalPadding,
-        horizontal: _rowHorizontalPadding,
+    return Container(
+      constraints: BoxConstraints(minHeight: dimens.rowMinHeight),
+      padding: EdgeInsets.symmetric(
+        vertical: dimens.space3,
+        horizontal: dimens.space4,
+      ),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            width: dimens.borderHairline,
+            color: colors.borderSubtle,
+          ),
+        ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Column(
@@ -79,11 +89,13 @@ class SearchResultRow extends ConsumerWidget {
                       TextSpan(text: ' · ${result.marketName}'),
                     ],
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          SizedBox(width: _starGap),
+          SizedBox(width: dimens.space2),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => onToggleFavorite(result.symbol),
@@ -91,8 +103,12 @@ class SearchResultRow extends ConsumerWidget {
               isFavorite
                   ? 'assets/icons/ico_star_filled.svg'
                   : 'assets/icons/ico_star.svg',
-              width: _starIconSize,
-              height: _starIconSize,
+              width: dimens.iconMd,
+              height: dimens.iconMd,
+              colorFilter: ColorFilter.mode(
+                isFavorite ? colors.favoriteActive : colors.favoriteInactive,
+                BlendMode.srcIn,
+              ),
             ),
           ),
         ],
