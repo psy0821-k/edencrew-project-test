@@ -1,5 +1,9 @@
 import 'dart:async';
 
+import 'package:edencrew_assignment_starter/entities/daily_quote/daily_quote.dart';
+import 'package:edencrew_assignment_starter/entities/daily_quote/daily_quote_providers.dart';
+import 'package:edencrew_assignment_starter/entities/daily_quote/daily_quote_repository.dart';
+import 'package:edencrew_assignment_starter/entities/daily_quote/period.dart';
 import 'package:edencrew_assignment_starter/entities/quote/quote.dart';
 import 'package:edencrew_assignment_starter/entities/quote/quote_providers.dart';
 import 'package:edencrew_assignment_starter/entities/quote/quote_repository.dart';
@@ -8,7 +12,9 @@ import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta_provi
 import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta_repository.dart';
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_providers.dart';
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_repository.dart';
+import 'package:edencrew_assignment_starter/features/stock-detail/stock_detail_price_section.dart';
 import 'package:edencrew_assignment_starter/pages/stock_detail_page.dart';
+import 'package:edencrew_assignment_starter/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -75,6 +81,60 @@ class _FakeWatchlistRepository implements WatchlistRepository {
   }
 }
 
+class _FakeDailyQuoteRepository implements DailyQuoteRepository {
+  _FakeDailyQuoteRepository({
+    Map<Period, List<DailyQuote>>? quotesByPeriod,
+    Object? errorToThrow,
+  }) : _quotesByPeriod = quotesByPeriod ?? const {},
+       _errorToThrow = errorToThrow;
+
+  final Map<Period, List<DailyQuote>> _quotesByPeriod;
+  final Object? _errorToThrow;
+
+  @override
+  Future<List<DailyQuote>> fetchQuotes(String symbol, Period period) async {
+    if (_errorToThrow != null) throw _errorToThrow;
+    return _quotesByPeriod[period] ?? _defaultQuotesFor(period);
+  }
+}
+
+List<DailyQuote> _defaultQuotesFor(Period period) => [
+  DailyQuote(
+    date: '20260911',
+    closePrice: 70000,
+    openPrice: 70200,
+    highPrice: 70800,
+    lowPrice: 69900,
+    volume: 12345678,
+  ),
+  DailyQuote(
+    date: '20260910',
+    closePrice: 69000,
+    openPrice: 69200,
+    highPrice: 69800,
+    lowPrice: 68900,
+    volume: 11111111,
+  ),
+];
+
+const _oneYearQuote = DailyQuote(
+  date: '20250912',
+  closePrice: 50000,
+  openPrice: 50200,
+  highPrice: 50800,
+  lowPrice: 49900,
+  volume: 33333333,
+);
+
+const _threeMonthsQuote = DailyQuote(
+  date: '20260801',
+  closePrice: 65000,
+  openPrice: 65200,
+  highPrice: 65800,
+  lowPrice: 64900,
+  volume: 22222222,
+);
+
 const _sampleQuote = Quote(
   symbol: '005930',
   currentPrice: 70000,
@@ -96,6 +156,7 @@ Future<void> _pumpStockDetailPage(
   WidgetTester tester, {
   QuoteRepository? quoteRepository,
   StockMetaRepository? stockMetaRepository,
+  DailyQuoteRepository? dailyQuoteRepository,
   Set<String>? initialFavoriteSymbols,
 }) async {
   await tester.pumpWidget(
@@ -108,6 +169,9 @@ Future<void> _pumpStockDetailPage(
         stockMetaRepositoryProvider.overrideWithValue(
           stockMetaRepository ??
               _FakeStockMetaRepository(stockMeta: _sampleStockMeta),
+        ),
+        dailyQuoteRepositoryProvider.overrideWithValue(
+          dailyQuoteRepository ?? _FakeDailyQuoteRepository(),
         ),
         watchlistRepositoryProvider.overrideWithValue(
           _FakeWatchlistRepository(initialSymbols: initialFavoriteSymbols),
@@ -144,8 +208,18 @@ void main() {
       await _pumpStockDetailPage(tester);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('70,000'), findsOneWidget);
-      expect(find.textContaining('1,000'), findsOneWidget);
+      final priceSectionFinder = find.descendant(
+        of: find.byType(StockDetailPriceSection),
+        matching: find.textContaining('70,000'),
+      );
+      expect(priceSectionFinder, findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(StockDetailPriceSection),
+          matching: find.textContaining('1,000'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets(
@@ -227,9 +301,173 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(callCount, 2);
-      expect(find.textContaining('70,000'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(StockDetailPriceSection),
+          matching: find.textContaining('70,000'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('상세 화면에 진입해 데이터가 도착하면 1개월 탭이 선택된 상태로 요약 카드와 일별 시세 표가 표시된다', (
+      tester,
+    ) async {
+      await _pumpStockDetailPage(tester);
+      await tester.pumpAndSettle();
+
+      final oneMonthText = tester.widget<Text>(find.text('1개월'));
+      final context = tester.element(find.byType(StockDetailPage));
+      expect(oneMonthText.style?.color, context.colors.accentDefault);
+      expect(find.textContaining('70,200'), findsOneWidget); // 시가
+      expect(find.text('09.11'), findsOneWidget); // 표의 날짜
+    });
+
+    testWidgets('1개월 탭에서 3개월 탭을 누르면 표/카드가 3개월치 데이터로 바뀐다', (tester) async {
+      final threeMonthsQuote = DailyQuote(
+        date: '20260801',
+        closePrice: 65000,
+        openPrice: 65200,
+        highPrice: 65800,
+        lowPrice: 64900,
+        volume: 22222222,
+      );
+      await _pumpStockDetailPage(
+        tester,
+        dailyQuoteRepository: _FakeDailyQuoteRepository(
+          quotesByPeriod: {
+            Period.threeMonths: [threeMonthsQuote],
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('3개월'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('08.01'), findsOneWidget);
+    });
+
+    testWidgets('탭 전환 요청이 진행 중인 동안에는 기존 표/카드가 화면에서 사라지지 않는다', (
+      tester,
+    ) async {
+      final delayCompleter = Completer<List<DailyQuote>>();
+      var callCount = 0;
+      final repository = _DelayedDailyQuoteRepository(
+        onCall: (period) => callCount++,
+        delayFor: Period.threeMonths,
+        delayCompleter: delayCompleter,
+      );
+
+      await _pumpStockDetailPage(tester, dailyQuoteRepository: repository);
+      await tester.pumpAndSettle();
+      expect(find.text('09.11'), findsOneWidget);
+
+      await tester.tap(find.text('3개월'));
+      await tester.pump();
+
+      // 새 데이터가 아직 도착하지 않았으므로 기존 표는 화면에 남아있어야 한다.
+      expect(find.text('09.11'), findsOneWidget);
+
+      delayCompleter.complete(_defaultQuotesFor(Period.threeMonths));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets(
+      '3개월을 누른 직후 바로 1년을 눌러 두 요청이 겹치면, 최종 화면에는 1년(마지막으로 누른 탭)의 데이터만 반영된다',
+      (tester) async {
+        final repository = _RaceDailyQuoteRepository();
+
+        await _pumpStockDetailPage(tester, dailyQuoteRepository: repository);
+        await tester.pumpAndSettle();
+        expect(find.text('09.11'), findsOneWidget); // 최초 oneMonth 데이터
+
+        await tester.tap(find.text('3개월'));
+        await tester.pump();
+        await tester.tap(find.text('1년'));
+        await tester.pump();
+
+        // 늦게 요청한 1년이 먼저 응답하고, 먼저 요청한 3개월이 나중에 응답한다.
+        repository.completeWith(Period.oneYear, [_oneYearQuote]);
+        await tester.pump();
+        repository.completeWith(Period.threeMonths, [_threeMonthsQuote]);
+        await tester.pumpAndSettle();
+
+        expect(find.text('09.12'), findsOneWidget); // 1년 데이터
+        expect(find.text('08.01'), findsNothing); // 3개월 데이터는 반영되지 않음
+      },
+    );
+
+    testWidgets('기간 탭 전환 중 조회가 실패하면 기존 표/카드는 유지된 채 상단에 에러 배너와 다시 시도 버튼이 표시된다', (
+      tester,
+    ) async {
+      final repository = _FailingOnSwitchDailyQuoteRepository();
+
+      await _pumpStockDetailPage(tester, dailyQuoteRepository: repository);
+      await tester.pumpAndSettle();
+      expect(find.text('09.11'), findsOneWidget);
+
+      await tester.tap(find.text('3개월'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('09.11'), findsOneWidget); // 기존 표 유지
+      expect(find.text('다시 시도'), findsWidgets); // 헤더 에러 뷰가 없으므로 배너의 것
     });
   });
+}
+
+class _DelayedDailyQuoteRepository implements DailyQuoteRepository {
+  _DelayedDailyQuoteRepository({
+    required this.onCall,
+    required this.delayFor,
+    required this.delayCompleter,
+  });
+
+  final void Function(Period period) onCall;
+  final Period delayFor;
+  final Completer<List<DailyQuote>> delayCompleter;
+
+  @override
+  Future<List<DailyQuote>> fetchQuotes(String symbol, Period period) async {
+    onCall(period);
+    if (period == delayFor) return delayCompleter.future;
+    return _defaultQuotesFor(period);
+  }
+}
+
+/// 최초 oneMonth 로드는 즉시 성공하고, 이후 요청된 기간은 [completeWith]로
+/// 응답 순서를 자유롭게 제어할 수 있는 fake. 응답 역전(늦게 요청한 기간이
+/// 먼저 응답) 시나리오를 재현하는 데 사용한다.
+class _RaceDailyQuoteRepository implements DailyQuoteRepository {
+  final Map<Period, Completer<List<DailyQuote>>> _completers = {};
+  bool _isFirstCall = true;
+
+  Completer<List<DailyQuote>> _completerFor(Period period) =>
+      _completers.putIfAbsent(period, () => Completer());
+
+  void completeWith(Period period, List<DailyQuote> quotes) {
+    _completerFor(period).complete(quotes);
+  }
+
+  @override
+  Future<List<DailyQuote>> fetchQuotes(String symbol, Period period) async {
+    if (_isFirstCall) {
+      _isFirstCall = false;
+      return _defaultQuotesFor(period);
+    }
+    return _completerFor(period).future;
+  }
+}
+
+class _FailingOnSwitchDailyQuoteRepository implements DailyQuoteRepository {
+  int _calls = 0;
+
+  @override
+  Future<List<DailyQuote>> fetchQuotes(String symbol, Period period) async {
+    _calls++;
+    if (_calls == 1) return _defaultQuotesFor(period);
+    throw Exception('network error');
+  }
 }
 
 class _CountingQuoteRepository implements QuoteRepository {

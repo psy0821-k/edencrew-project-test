@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:edencrew_assignment_starter/entities/daily_quote/daily_quote_providers.dart';
+import 'package:edencrew_assignment_starter/entities/daily_quote/mock_daily_quote_repository.dart';
 import 'package:edencrew_assignment_starter/entities/quote/quote.dart';
 import 'package:edencrew_assignment_starter/entities/quote/quote_providers.dart';
 import 'package:edencrew_assignment_starter/entities/quote/quote_repository.dart';
@@ -305,6 +307,9 @@ void main() {
               stockMetaRepositoryProvider.overrideWithValue(
                 _FakeStockMetaRepository(),
               ),
+              dailyQuoteRepositoryProvider.overrideWithValue(
+                MockDailyQuoteRepository(),
+              ),
             ],
             child: const MaterialApp(home: WatchlistPage()),
           ),
@@ -343,6 +348,9 @@ void main() {
               ),
               stockMetaRepositoryProvider.overrideWithValue(
                 _FakeStockMetaRepository(),
+              ),
+              dailyQuoteRepositoryProvider.overrideWithValue(
+                MockDailyQuoteRepository(),
               ),
             ],
             child: const MaterialApp(home: WatchlistPage()),
