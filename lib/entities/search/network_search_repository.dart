@@ -52,18 +52,19 @@ class NetworkSearchRepository implements SearchRepository {
                 item.nationCode == 'KOR' && _sixDigitSymbol.hasMatch(item.code),
           );
 
-      final results = <SearchResult>[];
-      for (final item in domesticStocks) {
-        final meta = await _stockMetaRepository.fetchStockMeta(item.code);
-        results.add(
+      final domesticStockList = domesticStocks.toList();
+      final metas = await Future.wait(
+        domesticStockList.map((item) => _stockMetaRepository.fetchStockMeta(item.code)),
+      );
+
+      return [
+        for (var i = 0; i < domesticStockList.length; i++)
           SearchResult(
-            symbol: item.code,
-            name: item.name,
-            marketName: meta.marketName,
+            symbol: domesticStockList[i].code,
+            name: domesticStockList[i].name,
+            marketName: metas[i].marketName,
           ),
-        );
-      }
-      return results;
+      ];
     } on Failure {
       rethrow;
     } catch (e) {
