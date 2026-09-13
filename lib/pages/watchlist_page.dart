@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../entities/watchlist/watchlist_item.dart';
 import '../entities/watchlist/watchlist_providers.dart';
 import '../features/watchlist-list/watchlist_empty_view.dart';
 import '../features/watchlist-list/watchlist_header.dart';
@@ -20,6 +21,7 @@ class WatchlistPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsAsync = ref.watch(watchlistItemsProvider);
     final sortCriteria = ref.watch(watchlistSortCriteriaProvider);
+    final isRefreshing = ref.watch(watchlistRefreshPendingProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -44,7 +46,23 @@ class WatchlistPage extends ConsumerWidget {
 
                   if (items != null) {
                     if (items.isEmpty) return const WatchlistEmptyView();
-                    final sorted = sortWatchlistItems(items, sortCriteria);
+                    // 새로고침 진행 중에는 이전 시세를 그대로 보여주는 대신,
+                    // WatchlistRow가 quote == null일 때 처리하는 스켈레톤을
+                    // 재사용해 실제로 다시 조회 중임을 알린다.
+                    final displayItems = isRefreshing
+                        ? [
+                            for (final item in items)
+                              WatchlistItem(
+                                symbol: item.symbol,
+                                stockMeta: item.stockMeta,
+                                quote: null,
+                              ),
+                          ]
+                        : items;
+                    final sorted = sortWatchlistItems(
+                      displayItems,
+                      sortCriteria,
+                    );
                     return ListView.builder(
                       itemCount: sorted.length,
                       itemBuilder: (context, index) =>

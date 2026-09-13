@@ -9,6 +9,7 @@ import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta_repos
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_providers.dart';
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_repository.dart';
 import 'package:edencrew_assignment_starter/pages/watchlist_page.dart';
+import 'package:edencrew_assignment_starter/widgets/skeleton_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -128,6 +129,49 @@ void main() {
 
         completer.complete();
         await tester.pumpAndSettle();
+      },
+    );
+
+    testWidgets(
+      'should show skeleton boxes for existing rows while a refresh is in '
+      'progress, then show real values again once it completes',
+      (WidgetTester tester) async {
+        final completer = Completer<void>();
+        final quoteRepository = _RecordingQuoteRepository(
+          delayFrom: 2,
+          delay: completer.future,
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              watchlistRepositoryProvider.overrideWithValue(
+                _FakeWatchlistRepository(initialSymbols: {'005930'}),
+              ),
+              quoteRepositoryProvider.overrideWithValue(quoteRepository),
+              stockMetaRepositoryProvider.overrideWithValue(
+                _FakeStockMetaRepository(),
+              ),
+            ],
+            child: const MaterialApp(home: WatchlistPage()),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('1,000'), findsOneWidget);
+        expect(find.byType(SkeletonBox), findsNothing);
+
+        await tester.tap(find.byType(IconButton));
+        await tester.pump();
+
+        expect(find.textContaining('1,000'), findsNothing);
+        expect(find.byType(SkeletonBox), findsWidgets);
+
+        completer.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('1,000'), findsOneWidget);
+        expect(find.byType(SkeletonBox), findsNothing);
       },
     );
   });
