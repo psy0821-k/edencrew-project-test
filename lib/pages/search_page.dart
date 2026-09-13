@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../entities/search/search_result.dart';
+import '../entities/watchlist/watchlist_providers.dart';
 import '../features/search-list/search_input_field.dart';
 import '../features/search-list/search_result_row.dart';
 import '../features/search-query/query_normalizer.dart';
 import '../features/search-query/search_debouncer_notifier.dart';
+import '../shared/state/pending_symbols_notifier.dart';
 import '../theme/theme.dart';
 import '../widgets/empty_state_view.dart';
 
@@ -45,6 +47,31 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     _controller.clear();
     setState(() => _rawQuery = '');
     ref.read(searchDebouncerNotifierProvider.notifier).onQueryChanged('');
+  }
+
+  Future<void> _onToggleFavorite(String symbol) async {
+    await ref.read(pendingSymbolsProvider.notifier).run(symbol, () async {
+      final isNowFavorite = await ref
+          .read(watchlistProvider.notifier)
+          .toggleFavorite(symbol);
+      if (!mounted) return;
+      _showFavoriteToast(isNowFavorite);
+    });
+  }
+
+  void _showFavoriteToast(bool isNowFavorite) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            isNowFavorite ? '관심이 등록되었습니다' : '관심이 해제되었습니다',
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: context.colors.surfaceOverlay,
+        ),
+      );
   }
 
   @override
@@ -106,7 +133,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         return ListView.builder(
           itemCount: results.length,
           itemBuilder: (context, index) {
-            return SearchResultRow(result: results[index], query: query);
+            return SearchResultRow(
+              result: results[index],
+              query: query,
+              onToggleFavorite: _onToggleFavorite,
+            );
           },
         );
       },
