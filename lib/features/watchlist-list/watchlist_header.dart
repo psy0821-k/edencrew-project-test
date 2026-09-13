@@ -78,7 +78,15 @@ class WatchlistHeader extends StatelessWidget {
                           color: colors.textSecondary,
                         ),
                       ),
-                      SvgPicture.asset('assets/icons/ico_align.svg'),
+                      SvgPicture.asset(
+                        'assets/icons/ico_align.svg',
+                        width: dimens.iconMd,
+                        height: dimens.iconMd,
+                        colorFilter: ColorFilter.mode(
+                          colors.textSecondary,
+                          BlendMode.srcIn,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -87,7 +95,15 @@ class WatchlistHeader extends StatelessWidget {
                   onPressed: onRefreshTap,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: SvgPicture.asset('assets/icons/ico_refresh.svg'),
+                  icon: SvgPicture.asset(
+                    'assets/icons/ico_refresh.svg',
+                    width: dimens.iconMd,
+                    height: dimens.iconMd,
+                    colorFilter: ColorFilter.mode(
+                      colors.textSecondary,
+                      BlendMode.srcIn,
+                    ),
+                  ),
                 ),
               ],
             ),

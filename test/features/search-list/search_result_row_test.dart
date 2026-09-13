@@ -138,6 +138,35 @@ void main() {
     );
 
     testWidgets(
+      'should not overflow the fixed row height when the text scale factor is large',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              watchlistRepositoryProvider.overrideWithValue(
+                _FakeWatchlistRepository(),
+              ),
+            ],
+            child: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+              child: MaterialApp(
+                home: Scaffold(
+                  body: SearchResultRow(
+                    result: _sampleResult,
+                    query: '',
+                    onToggleFavorite: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
       'should show a filled star icon when the stock is already in the watchlist',
       (WidgetTester tester) async {
         await _pumpSearchResultRow(

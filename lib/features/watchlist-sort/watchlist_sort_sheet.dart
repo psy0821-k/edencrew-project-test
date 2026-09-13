@@ -37,6 +37,7 @@ class _WatchlistSortSheetContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final dimens = context.dimens;
     final selected = ref.watch(watchlistSortCriteriaProvider);
 
     return Align(
@@ -59,8 +60,8 @@ class _WatchlistSortSheetContent extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
+              padding: EdgeInsets.symmetric(
+                horizontal: dimens.space4,
                 vertical: _titleVerticalPadding,
               ),
               child: Text(
@@ -106,13 +107,14 @@ class _SortOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final dimens = context.dimens;
     final color = selected ? colors.textPrimary : colors.textSecondary;
 
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
+        padding: EdgeInsets.symmetric(
+          horizontal: dimens.space4,
           vertical: _optionVerticalPadding,
         ),
         child: Row(
@@ -133,8 +135,8 @@ class _SortOptionTile extends StatelessWidget {
             if (selected)
               SvgPicture.asset(
                 'assets/icons/ico_check.svg',
-                width: 20,
-                height: 20,
+                width: dimens.iconMd,
+                height: dimens.iconMd,
                 colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
               ),
           ],
