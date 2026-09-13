@@ -5,6 +5,10 @@ import '../../entities/daily_quote/daily_quote_providers.dart';
 import '../../entities/daily_quote/period.dart';
 import '../../theme/theme.dart';
 
+const double _tabHeight = 28;
+const double _tabPaddingHorizontal = 12;
+const double _tabPaddingVertical = 5;
+const double _tabGap = 4;
 const double _tabFontSize = 13;
 const double _tabLineHeight = 18;
 
@@ -20,17 +24,19 @@ class StockDetailPeriodTabs extends ConsumerWidget {
 
     return Row(
       children: [
-        for (final period in Period.values)
-          Padding(
-            padding: EdgeInsets.only(right: dimens.space2),
+        for (final period in Period.values) ...[
+          if (period != Period.values.first) const SizedBox(width: _tabGap),
+          Expanded(
             child: GestureDetector(
               onTap: () =>
                   ref.read(selectedPeriodProvider.notifier).state = period,
               child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: dimens.space3,
-                  vertical: dimens.space1,
+                height: _tabHeight,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: _tabPaddingHorizontal,
+                  vertical: _tabPaddingVertical,
                 ),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: period == selected ? colors.accentBg : null,
                   borderRadius: BorderRadius.circular(dimens.radiusSm),
@@ -39,7 +45,7 @@ class StockDetailPeriodTabs extends ConsumerWidget {
                   period.label,
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
-                    fontWeight: AppTypography.medium,
+                    fontWeight: AppTypography.regular,
                     fontSize: _tabFontSize,
                     height: _tabLineHeight / _tabFontSize,
                     color: period == selected
@@ -50,6 +56,7 @@ class StockDetailPeriodTabs extends ConsumerWidget {
               ),
             ),
           ),
+        ],
       ],
     );
   }

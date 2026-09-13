@@ -6,10 +6,15 @@ import '../../shared/utils/date_formatter.dart';
 import '../../shared/utils/number_formatter.dart';
 import '../../theme/theme.dart';
 
-const double _cellFontSize = 12;
-const double _cellLineHeight = 16;
+const double _titleFontSize = 15;
+const double _titleLineHeight = 20;
+const double _headerFontSize = 12;
+const double _headerLineHeight = 16;
+const double _cellFontSize = 13;
+const double _cellLineHeight = 18;
 
-/// 날짜(MM.dd)/종가/등락/거래량 컬럼의 표. quotes를 최신순 그대로 렌더링한다.
+/// "일별 시세" 타이틀 + 날짜/종가/등락/거래량 컬럼 헤더 + 표. quotes를 최신순
+/// 그대로 렌더링한다.
 class StockDetailDailyQuoteTable extends StatelessWidget {
   const StockDetailDailyQuoteTable({super.key, required this.quotes});
 
@@ -21,7 +26,21 @@ class StockDetailDailyQuoteTable extends StatelessWidget {
     final dimens = context.dimens;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          '일별 시세',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontWeight: AppTypography.bold,
+            fontSize: _titleFontSize,
+            height: _titleLineHeight / _titleFontSize,
+            color: colors.textPrimary,
+          ),
+        ),
+        SizedBox(height: dimens.space3),
+        _HeaderRow(colors: colors),
+        SizedBox(height: dimens.space2),
         for (var i = 0; i < quotes.length; i++)
           Padding(
             padding: EdgeInsets.symmetric(vertical: dimens.space1),
@@ -31,6 +50,38 @@ class StockDetailDailyQuoteTable extends StatelessWidget {
               colors: colors,
             ),
           ),
+      ],
+    );
+  }
+}
+
+class _HeaderRow extends StatelessWidget {
+  const _HeaderRow({required this.colors});
+
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+      fontFamily: AppTypography.fontFamily,
+      fontWeight: AppTypography.regular,
+      fontSize: _headerFontSize,
+      height: _headerLineHeight / _headerFontSize,
+      color: colors.textTertiary,
+    );
+
+    return Row(
+      children: [
+        Expanded(child: Text('날짜', style: style)),
+        Expanded(
+          child: Text('종가', style: style, textAlign: TextAlign.right),
+        ),
+        Expanded(
+          child: Text('등락', style: style, textAlign: TextAlign.right),
+        ),
+        Expanded(
+          child: Text('거래량', style: style, textAlign: TextAlign.right),
+        ),
       ],
     );
   }
@@ -60,17 +111,33 @@ class _DailyQuoteRow extends StatelessWidget {
     );
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(DateFormatter.internalToDisplay(quote.date), style: style()),
-        Text(NumberFormatter.comma(quote.closePrice), style: style()),
-        Text(
-          change?.text ?? '-',
-          style: style(color: change?.color ?? colors.textTertiary),
+        Expanded(
+          child: Text(
+            DateFormatter.internalToDisplay(quote.date),
+            style: style(),
+          ),
         ),
-        Text(
-          NumberFormatter.compactKorean(quote.volume),
-          style: style(color: colors.textSecondary),
+        Expanded(
+          child: Text(
+            NumberFormatter.comma(quote.closePrice),
+            style: style(),
+            textAlign: TextAlign.right,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            change?.text ?? '-',
+            style: style(color: change?.color ?? colors.textTertiary),
+            textAlign: TextAlign.right,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            NumberFormatter.compactKorean(quote.volume),
+            style: style(color: colors.textSecondary),
+            textAlign: TextAlign.right,
+          ),
         ),
       ],
     );
