@@ -139,7 +139,7 @@ void main() {
         await tester.pump();
 
         expect(
-          find.text("'없는종목'와 일치하는 검색 결과를 찾지 못했습니다."),
+          find.text("'없는종목'와\n일치하는 검색 결과를 찾지 못했습니다."),
           findsOneWidget,
         );
       },

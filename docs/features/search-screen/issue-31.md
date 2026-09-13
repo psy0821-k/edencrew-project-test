@@ -73,7 +73,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 - **초기 상태** (`_rawQuery`가 비었거나 `normalizeQuery(_rawQuery).length < 2`):
   `EmptyStateView(iconAsset: 'assets/icons/ico_search.svg', title: '종목을 검색해 보세요', caption: '종목명 또는 종목코드 6자리로\n검색하실 수 있습니다')`
 - **결과없음 상태** (`AsyncData([])`이고 유효한 검색어인 경우):
-  `EmptyStateView(iconAsset: 'assets/icons/ico_search_empty.svg', title: '검색 결과가 없습니다', caption: "'$_rawQuery'와 일치하는 검색 결과를 찾지 못했습니다.")`
+  `EmptyStateView(iconAsset: 'assets/icons/ico_search_empty.svg', title: '검색 결과가 없습니다', caption: "'$_rawQuery'와\n일치하는 검색 결과를 찾지 못했습니다.")`
 - **에러 상태** (`AsyncError`):
   `EmptyStateView(iconAsset: 'assets/icons/ico_search_empty.svg', title: '검색 결과가 없습니다', caption: '검색 중 문제가 발생했습니다')`
 

@@ -9,6 +9,12 @@ import '../features/search-query/search_debouncer_notifier.dart';
 import '../widgets/empty_state_view.dart';
 
 const int _minQueryLength = 2;
+const double _horizontalPadding = 16;
+// Figma 스펙상 검색바 컨테이너는 60px(8/12 비대칭 padding)이지만, 관심 탭 헤더(WatchlistHeader)가
+// 52px 고정이라 그대로 적용하면 관심↔검색 탭 전환 시 하단 콘텐츠 시작 위치가 8px 어긋난다.
+// 탭 전환 시 콘텐츠가 흔들리지 않도록 WatchlistHeader와 동일한 52px로 맞추고,
+// 그 안에서 SearchInputField(40px)를 중앙 정렬해 위아래 여백을 균등하게 둔다.
+const double _headerHeight = 52;
 
 /// 검색 화면. searchDebouncerNotifierProvider를 구독해
 /// 초기/결과/결과없음/에러 상태를 전환한다.
@@ -46,18 +52,29 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final isValidQuery = normalizeQuery(_rawQuery).length >= _minQueryLength;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('검색')),
-      body: Column(
-        children: [
-          SearchInputField(
-            controller: _controller,
-            onChanged: _onChanged,
-            onClear: _onClear,
-          ),
-          Expanded(
-            child: _buildBody(searchState, isValidQuery),
-          ),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            SizedBox(
+              height: _headerHeight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: _horizontalPadding,
+                ),
+                child: Center(
+                  child: SearchInputField(
+                    controller: _controller,
+                    onChanged: _onChanged,
+                    onClear: _onClear,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: _buildBody(searchState, isValidQuery),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -80,7 +97,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           return EmptyStateView(
             iconAsset: 'assets/icons/ico_search_empty.svg',
             title: '검색 결과가 없습니다',
-            caption: "'$_rawQuery'와 일치하는 검색 결과를 찾지 못했습니다.",
+            caption: "'$_rawQuery'와\n일치하는 검색 결과를 찾지 못했습니다.",
           );
         }
 
