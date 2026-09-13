@@ -68,6 +68,36 @@ class _FakeStockMetaRepository implements StockMetaRepository {
       StockMeta(symbol: symbol, name: symbol, marketName: '코스피');
 }
 
+/// [failFrom]번째 호출부터 예외를 던지는 fake. 첫 로드 실패와, 이전 데이터가
+/// 있는 상태에서의 재조회 실패를 각각 재현하는 데 사용한다.
+class _FailingQuoteRepository implements QuoteRepository {
+  _FailingQuoteRepository({this.failFrom = 1});
+
+  int callCount = 0;
+  final int failFrom;
+
+  @override
+  Future<Map<String, Quote>> fetchQuotes(List<String> symbols) async {
+    callCount++;
+    if (callCount >= failFrom) {
+      throw Exception('network error');
+    }
+    return {
+      for (final symbol in symbols)
+        symbol: Quote(
+          symbol: symbol,
+          currentPrice: 1000,
+          previousClose: 1000,
+          open: 1000,
+          high: 1000,
+          low: 1000,
+          volume: 0,
+          countOfListedStock: 0,
+        ),
+    };
+  }
+}
+
 void main() {
   group('WatchlistPage', () {
     testWidgets(
@@ -172,6 +202,66 @@ void main() {
 
         expect(find.textContaining('1,000'), findsOneWidget);
         expect(find.byType(SkeletonBox), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'should replace the entire list area with an error view (keeping the '
+      'header) when the very first load fails',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              watchlistRepositoryProvider.overrideWithValue(
+                _FakeWatchlistRepository(initialSymbols: {'005930'}),
+              ),
+              quoteRepositoryProvider.overrideWithValue(
+                _FailingQuoteRepository(),
+              ),
+              stockMetaRepositoryProvider.overrideWithValue(
+                _FakeStockMetaRepository(),
+              ),
+            ],
+            child: const MaterialApp(home: WatchlistPage()),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('관심'), findsOneWidget);
+        expect(find.text('목록을 불러오지 못했습니다'), findsOneWidget);
+        expect(find.text('다시 시도'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should keep the existing list and show an error banner on top when a '
+      'refresh fails after a previous successful load',
+      (WidgetTester tester) async {
+        final quoteRepository = _FailingQuoteRepository(failFrom: 2);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              watchlistRepositoryProvider.overrideWithValue(
+                _FakeWatchlistRepository(initialSymbols: {'005930'}),
+              ),
+              quoteRepositoryProvider.overrideWithValue(quoteRepository),
+              stockMetaRepositoryProvider.overrideWithValue(
+                _FakeStockMetaRepository(),
+              ),
+            ],
+            child: const MaterialApp(home: WatchlistPage()),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('1,000'), findsOneWidget);
+
+        await tester.tap(find.byType(IconButton));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('1,000'), findsOneWidget);
+        expect(find.text('목록을 불러오지 못했습니다'), findsOneWidget);
       },
     );
   });
