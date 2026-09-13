@@ -17,6 +17,23 @@ void main() {
       expect(response.body, 'ok');
     });
 
+    test(
+      '요청에 브라우저 User-Agent 헤더를 포함한다(Naver가 Dart 기본 UA를 봇으로 차단하는 것을 방지)',
+      () async {
+        String? capturedUserAgent;
+        final mockClient = MockClient((request) async {
+          capturedUserAgent = request.headers['User-Agent'];
+          return http.Response('ok', 200);
+        });
+        final apiClient = ApiClient(client: mockClient, maxRetries: 0);
+
+        await apiClient.get(Uri.parse('https://example.com'));
+
+        expect(capturedUserAgent, isNotNull);
+        expect(capturedUserAgent, isNot(contains('Dart')));
+      },
+    );
+
     test('실패 응답이 재시도 후에도 계속되면 NetworkFailure를 던진다', () async {
       var callCount = 0;
       final mockClient = MockClient((request) async {

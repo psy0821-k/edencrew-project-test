@@ -21,6 +21,13 @@ class ApiClient {
   /// 재시도 사이의 고정 딜레이. (지수 백오프는 이 규모에 과함)
   final Duration retryDelay;
 
+  /// Dart의 기본 User-Agent(`Dart/x.x (dart:io)`)로 요청하면 Naver가 봇으로
+  /// 감지해 `sise_day.naver`(일별 시세) 등 일부 endpoint가 에러 페이지를
+  /// 반환한다. 브라우저처럼 보이는 User-Agent를 모든 요청에 공통 적용한다.
+  static const _userAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
   /// GET 요청을 보내고 실패 시 [maxRetries]까지 재시도합니다.
   ///
   /// 응답 바이트를 그대로 반환합니다 — 일별 시세 HTML처럼 비UTF-8 인코딩인
@@ -30,7 +37,10 @@ class ApiClient {
 
     for (var attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        final response = await _client.get(uri);
+        final response = await _client.get(
+          uri,
+          headers: const {'User-Agent': _userAgent},
+        );
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return response;
         }
