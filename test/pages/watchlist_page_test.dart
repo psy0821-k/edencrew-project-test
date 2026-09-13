@@ -8,17 +8,23 @@ import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta_provi
 import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta_repository.dart';
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_providers.dart';
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_repository.dart';
+import 'package:edencrew_assignment_starter/pages/stock_detail_page.dart';
 import 'package:edencrew_assignment_starter/pages/watchlist_page.dart';
 import 'package:edencrew_assignment_starter/widgets/skeleton_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeWatchlistRepository implements WatchlistRepository {
-  _FakeWatchlistRepository({Set<String>? initialSymbols})
+  _FakeWatchlistRepository({Set<String>? initialSymbols, this.toggleDelay})
     : _symbols = initialSymbols ?? {};
 
   final Set<String> _symbols;
+
+  /// 지정하면 toggleFavorite이 이 Future가 완료될 때까지 기다린다.
+  final Future<void>? toggleDelay;
+  int toggleCallCount = 0;
 
   @override
   Set<String> getSymbols() => _symbols;
@@ -27,7 +33,26 @@ class _FakeWatchlistRepository implements WatchlistRepository {
   bool isFavorite(String symbol) => _symbols.contains(symbol);
 
   @override
-  Future<bool> toggleFavorite(String symbol) async => false;
+  Future<bool> toggleFavorite(String symbol) async {
+    toggleCallCount++;
+    if (toggleDelay != null) await toggleDelay;
+    final nowFavorite = !_symbols.contains(symbol);
+    if (nowFavorite) {
+      _symbols.add(symbol);
+    } else {
+      _symbols.remove(symbol);
+    }
+    return nowFavorite;
+  }
+}
+
+Finder _closeIconFinder() {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is SvgPicture &&
+        (widget.bytesLoader as SvgAssetLoader).assetName ==
+            'assets/icons/ico_close.svg',
+  );
 }
 
 /// fetchQuotes 호출 횟수를 기록하는 fake. [delayFrom]번째 호출부터는 즉시
@@ -262,6 +287,146 @@ void main() {
 
         expect(find.textContaining('1,000'), findsOneWidget);
         expect(find.text('목록을 불러오지 못했습니다'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '상세 화면 진입 후 뒤로가기를 누르면 관심 화면으로 돌아오고 목록 상태가 유지된다',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              watchlistRepositoryProvider.overrideWithValue(
+                _FakeWatchlistRepository(initialSymbols: {'005930'}),
+              ),
+              quoteRepositoryProvider.overrideWithValue(
+                _RecordingQuoteRepository(),
+              ),
+              stockMetaRepositoryProvider.overrideWithValue(
+                _FakeStockMetaRepository(),
+              ),
+            ],
+            child: const MaterialApp(home: WatchlistPage()),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('005930'));
+        await tester.pumpAndSettle();
+        expect(find.byType(StockDetailPage), findsOneWidget);
+
+        final backButtonFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is SvgPicture &&
+              (widget.bytesLoader as SvgAssetLoader).assetName ==
+                  'assets/icons/ico_back.svg',
+        );
+        await tester.tap(backButtonFinder);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(WatchlistPage), findsOneWidget);
+        expect(find.text('005930'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '종목 행을 탭하면 StockDetailPage(symbol: ...)로 이동한다',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              watchlistRepositoryProvider.overrideWithValue(
+                _FakeWatchlistRepository(initialSymbols: {'005930'}),
+              ),
+              quoteRepositoryProvider.overrideWithValue(
+                _RecordingQuoteRepository(),
+              ),
+              stockMetaRepositoryProvider.overrideWithValue(
+                _FakeStockMetaRepository(),
+              ),
+            ],
+            child: const MaterialApp(home: WatchlistPage()),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('005930'));
+        await tester.pumpAndSettle();
+
+        final detailPage = tester.widget<StockDetailPage>(
+          find.byType(StockDetailPage),
+        );
+        expect(detailPage.symbol, '005930');
+      },
+    );
+
+    testWidgets(
+      'close 아이콘을 탭하면 확인 절차 없이 즉시 관심이 해제되고 목록에서 사라지며 토스트가 표시된다',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              watchlistRepositoryProvider.overrideWithValue(
+                _FakeWatchlistRepository(initialSymbols: {'005930'}),
+              ),
+              quoteRepositoryProvider.overrideWithValue(
+                _RecordingQuoteRepository(),
+              ),
+              stockMetaRepositoryProvider.overrideWithValue(
+                _FakeStockMetaRepository(),
+              ),
+            ],
+            child: const MaterialApp(home: WatchlistPage()),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('005930'), findsOneWidget);
+
+        await tester.tap(_closeIconFinder());
+        await tester.pumpAndSettle();
+
+        expect(find.text('005930'), findsNothing);
+        expect(find.text('관심이 해제되었습니다'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'close 아이콘을 연속으로 빠르게 탭하면 두 번째 탭은 무시된다',
+      (WidgetTester tester) async {
+        final delayCompleter = Completer<void>();
+        final watchlistRepository = _FakeWatchlistRepository(
+          initialSymbols: {'005930'},
+          toggleDelay: delayCompleter.future,
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              watchlistRepositoryProvider.overrideWithValue(
+                watchlistRepository,
+              ),
+              quoteRepositoryProvider.overrideWithValue(
+                _RecordingQuoteRepository(),
+              ),
+              stockMetaRepositoryProvider.overrideWithValue(
+                _FakeStockMetaRepository(),
+              ),
+            ],
+            child: const MaterialApp(home: WatchlistPage()),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(_closeIconFinder());
+        await tester.pump();
+        await tester.tap(_closeIconFinder());
+        await tester.pump();
+
+        delayCompleter.complete();
+        await tester.pumpAndSettle();
+
+        expect(watchlistRepository.toggleCallCount, 1);
       },
     );
   });

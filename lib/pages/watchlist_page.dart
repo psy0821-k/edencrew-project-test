@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,14 +15,60 @@ import '../features/watchlist-sort/watchlist_comparator.dart';
 import '../features/watchlist-sort/watchlist_sort_provider.dart';
 import '../features/watchlist-sort/watchlist_sort_sheet.dart';
 import '../shared/state/pending_flag_notifier.dart';
+import '../shared/state/pending_symbols_notifier.dart';
+import '../widgets/favorite_toast.dart';
+import 'stock_detail_page.dart';
 
 /// 관심 화면. 헤더는 [WatchlistHeader], 빈 상태는 [WatchlistEmptyView]로 교체됐다.
 /// 목록은 [watchlistItemsProvider]를 구독한다.
-class WatchlistPage extends ConsumerWidget {
+class WatchlistPage extends ConsumerStatefulWidget {
   const WatchlistPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WatchlistPage> createState() => _WatchlistPageState();
+}
+
+class _WatchlistPageState extends ConsumerState<WatchlistPage> {
+  Timer? _toastTimer;
+
+  @override
+  void dispose() {
+    _toastTimer?.cancel();
+    super.dispose();
+  }
+
+  void _refresh() {
+    // 실패 시에도 watchlistItemsProvider의 AsyncValue 자체가 에러 상태를
+    // 담아 build()가 그걸로 배너/에러 뷰를 그리므로, 여기서는 재조회를
+    // 시작시키는 역할만 하고 예외는 흡수한다.
+    ref
+        .read(watchlistRefreshPendingProvider.notifier)
+        .run(() {
+          ref.invalidate(watchlistItemsProvider);
+          return ref.read(watchlistItemsProvider.future);
+        })
+        .catchError((_) {});
+  }
+
+  void _onRowTap(String symbol) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => StockDetailPage(symbol: symbol)),
+    );
+  }
+
+  Future<void> _onRemoveTap(String symbol) async {
+    await ref.read(pendingSymbolsProvider.notifier).run(symbol, () async {
+      final isNowFavorite = await ref
+          .read(watchlistProvider.notifier)
+          .toggleFavorite(symbol);
+      if (!mounted) return;
+      _toastTimer = showFavoriteToast(context, isNowFavorite);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final itemsAsync = ref.watch(watchlistItemsProvider);
     final sortCriteria = ref.watch(watchlistSortCriteriaProvider);
     final isRefreshing = ref.watch(watchlistRefreshPendingProvider);
@@ -32,7 +80,7 @@ class WatchlistPage extends ConsumerWidget {
             WatchlistHeader(
               sortLabel: sortCriteria.label,
               onSortTap: () => showWatchlistSortSheet(context),
-              onRefreshTap: () => _refresh(ref),
+              onRefreshTap: _refresh,
             ),
             Expanded(
               child: Builder(
@@ -64,8 +112,11 @@ class WatchlistPage extends ConsumerWidget {
                     );
                     final list = ListView.builder(
                       itemCount: sorted.length,
-                      itemBuilder: (context, index) =>
-                          WatchlistRow(item: sorted[index]),
+                      itemBuilder: (context, index) => WatchlistRow(
+                        item: sorted[index],
+                        onTap: _onRowTap,
+                        onRemoveTap: _onRemoveTap,
+                      ),
                     );
 
                     // 이전 데이터가 있는 상태에서 재조회가 실패하면, 목록은
@@ -73,9 +124,7 @@ class WatchlistPage extends ConsumerWidget {
                     if (itemsAsync.hasError) {
                       return Column(
                         children: [
-                          WatchlistErrorBanner(
-                            onRetryTap: () => _refresh(ref),
-                          ),
+                          WatchlistErrorBanner(onRetryTap: _refresh),
                           Expanded(child: list),
                         ],
                       );
@@ -90,7 +139,7 @@ class WatchlistPage extends ConsumerWidget {
                     // 표시할 이전 데이터 자체가 없는 첫 로드 실패는 목록
                     // 영역 전체를 에러 상태로 대체한다(헤더·탭바는 유지).
                     error: (error, stackTrace) =>
-                        WatchlistErrorView(onRetryTap: () => _refresh(ref)),
+                        WatchlistErrorView(onRetryTap: _refresh),
                   );
                 },
               ),
@@ -99,18 +148,5 @@ class WatchlistPage extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  void _refresh(WidgetRef ref) {
-    // 실패 시에도 watchlistItemsProvider의 AsyncValue 자체가 에러 상태를
-    // 담아 build()가 그걸로 배너/에러 뷰를 그리므로, 여기서는 재조회를
-    // 시작시키는 역할만 하고 예외는 흡수한다.
-    ref
-        .read(watchlistRefreshPendingProvider.notifier)
-        .run(() {
-          ref.invalidate(watchlistItemsProvider);
-          return ref.read(watchlistItemsProvider.future);
-        })
-        .catchError((_) {});
   }
 }
