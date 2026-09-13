@@ -6,6 +6,7 @@ import '../pages/search_page.dart';
 import '../pages/watchlist_page.dart';
 import '../theme/theme.dart';
 import 'current_tab_provider.dart';
+import 'tab_bar_height_provider.dart';
 
 const double _navIconSize = 22;
 
@@ -13,13 +14,30 @@ const double _navIconSize = 22;
 ///
 /// `IndexedStack`을 사용해 탭을 전환해도 각 화면의 상태(스크롤 위치 등)가
 /// 유지되도록 하고, 탭 인덱스는 [currentTabProvider]로 관리합니다.
-class RootShell extends ConsumerWidget {
+class RootShell extends ConsumerStatefulWidget {
   const RootShell({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RootShell> createState() => _RootShellState();
+}
+
+class _RootShellState extends ConsumerState<RootShell> {
+  final _tabBarKey = GlobalKey();
+
+  void _reportTabBarHeight(Duration _) {
+    final height = _tabBarKey.currentContext?.size?.height;
+    if (height != null) {
+      ref.read(tabBarHeightProvider.notifier).update(height);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentTab = ref.watch(currentTabProvider);
     final colors = context.colors;
+    final dimens = context.dimens;
+
+    WidgetsBinding.instance.addPostFrameCallback(_reportTabBarHeight);
 
     return Scaffold(
       body: IndexedStack(
@@ -27,10 +45,16 @@ class RootShell extends ConsumerWidget {
         children: const [WatchlistPage(), SearchPage()],
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        key: _tabBarKey,
+        padding: EdgeInsets.symmetric(vertical: dimens.space2),
         decoration: BoxDecoration(
           color: colors.surfaceRaised,
-          border: Border(top: BorderSide(width: 1, color: colors.borderSubtle)),
+          border: Border(
+            top: BorderSide(
+              width: dimens.borderHairline,
+              color: colors.borderSubtle,
+            ),
+          ),
         ),
         child: BottomNavigationBar(
           currentIndex: currentTab,

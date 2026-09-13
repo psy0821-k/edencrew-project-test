@@ -330,11 +330,14 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          find.byWidgetPredicate(
-            (widget) =>
-                widget is SvgPicture &&
-                (widget.bytesLoader as SvgAssetLoader).assetName ==
-                    'assets/icons/ico_star_filled.svg',
+          find.descendant(
+            of: find.byType(SearchResultRow),
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is SvgPicture &&
+                  (widget.bytesLoader as SvgAssetLoader).assetName ==
+                      'assets/icons/ico_star_filled.svg',
+            ),
           ),
           findsOneWidget,
         );
