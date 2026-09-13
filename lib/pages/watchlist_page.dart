@@ -9,6 +9,7 @@ import '../features/watchlist-sort/sort_criteria.dart';
 import '../features/watchlist-sort/watchlist_comparator.dart';
 import '../features/watchlist-sort/watchlist_sort_provider.dart';
 import '../features/watchlist-sort/watchlist_sort_sheet.dart';
+import '../shared/state/pending_flag_notifier.dart';
 
 /// 관심 화면. 헤더는 [WatchlistHeader], 빈 상태는 [WatchlistEmptyView]로 교체됐다.
 /// 목록은 [watchlistItemsProvider]를 구독한다.
@@ -27,7 +28,12 @@ class WatchlistPage extends ConsumerWidget {
             WatchlistHeader(
               sortLabel: sortCriteria.label,
               onSortTap: () => showWatchlistSortSheet(context),
-              onRefreshTap: () => ref.invalidate(watchlistItemsProvider),
+              onRefreshTap: () {
+                ref.read(watchlistRefreshPendingProvider.notifier).run(() {
+                  ref.invalidate(watchlistItemsProvider);
+                  return ref.read(watchlistItemsProvider.future);
+                });
+              },
             ),
             Expanded(
               child: Builder(
