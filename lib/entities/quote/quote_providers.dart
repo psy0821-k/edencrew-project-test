@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/api/api_client.dart';
 import '../../shared/config/data_source_mode.dart';
+import '../../shared/error/failure.dart';
 import 'mock_quote_repository.dart';
 import 'network_quote_repository.dart';
+import 'quote.dart';
 import 'quote_repository.dart';
 
 /// [ApiClient] 싱글턴. 여러 도메인 Repository가 공유합니다.
@@ -25,4 +27,15 @@ final quoteRepositoryProvider = Provider<QuoteRepository>((ref) {
       ref.watch(apiClientProvider),
     ),
   };
+});
+
+/// 단일 symbol의 시세를 조회합니다. 헤더/상세 화면 전용.
+///
+/// 응답 Map에 symbol이 없으면(빈 결과) [EmptyResultFailure]를 던집니다.
+final quoteProvider = FutureProvider.family<Quote, String>((ref, symbol) async {
+  final repository = ref.watch(quoteRepositoryProvider);
+  final result = await repository.fetchQuotes([symbol]);
+  final quote = result[symbol];
+  if (quote == null) throw const EmptyResultFailure();
+  return quote;
 });

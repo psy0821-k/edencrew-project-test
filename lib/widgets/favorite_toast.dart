@@ -29,10 +29,17 @@ Timer? _currentToastTimer;
 /// 이미 떠 있는 토스트가 있으면 즉시 제거하고 새 토스트로 교체한다.
 /// 등장(슬라이드+페이드) 후 2초 뒤 퇴장(페이드)하며 사라진다.
 ///
+/// [showTabBarGap]이 false면 하단 탭 바가 없는 화면(예: 상세 화면)에서
+/// 호출된 것으로 보고 tabBarHeight만큼의 여백을 더하지 않는다.
+///
 /// 반환하는 [Timer]는 호출부가 들고 있다가, 위젯이 dispose되기 전에
 /// `cancel()`해야 한다(그렇지 않으면 위젯 트리 밖에서 살아남아
 /// "타이머가 남아있다"는 테스트 실패나 dispose 후 접근 문제로 이어진다).
-Timer showFavoriteToast(BuildContext context, bool isNowFavorite) {
+Timer showFavoriteToast(
+  BuildContext context,
+  bool isNowFavorite, {
+  bool showTabBarGap = true,
+}) {
   _currentToastEntry?.remove();
   _currentToastTimer?.cancel();
 
@@ -41,6 +48,7 @@ Timer showFavoriteToast(BuildContext context, bool isNowFavorite) {
   entry = OverlayEntry(
     builder: (context) => _FavoriteToastOverlay(
       isNowFavorite: isNowFavorite,
+      showTabBarGap: showTabBarGap,
       onStateReady: (state) => _currentToastState = state,
     ),
   );
@@ -66,10 +74,12 @@ Future<void> _dismissCurrentToast(OverlayEntry entry) async {
 class _FavoriteToastOverlay extends StatefulWidget {
   const _FavoriteToastOverlay({
     required this.isNowFavorite,
+    required this.showTabBarGap,
     required this.onStateReady,
   });
 
   final bool isNowFavorite;
+  final bool showTabBarGap;
   final ValueChanged<_FavoriteToastOverlayState> onStateReady;
 
   @override
@@ -113,9 +123,9 @@ class _FavoriteToastOverlayState extends State<_FavoriteToastOverlay>
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    final tabBarHeight = ProviderScope.containerOf(
-      context,
-    ).read(tabBarHeightProvider);
+    final tabBarHeight = widget.showTabBarGap
+        ? ProviderScope.containerOf(context).read(tabBarHeightProvider)
+        : 0.0;
 
     return Positioned(
       left: 0,
