@@ -1,5 +1,5 @@
+import 'package:edencrew_assignment_starter/entities/stock_meta/caching_stock_meta_repository.dart';
 import 'package:edencrew_assignment_starter/entities/stock_meta/mock_stock_meta_repository.dart';
-import 'package:edencrew_assignment_starter/entities/stock_meta/network_stock_meta_repository.dart';
 import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta.dart';
 import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta_providers.dart';
 import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta_repository.dart';
@@ -15,14 +15,18 @@ class _FakeStockMetaRepository implements StockMetaRepository {
 
 void main() {
   group('stockMetaRepositoryProvider', () {
-    test('dataSourceMode 기본값(network)일 때 NetworkStockMetaRepository를 반환한다', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    test(
+      'dataSourceMode 기본값(network)일 때 캐싱이 적용된 '
+      'CachingStockMetaRepository를 반환한다',
+      () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      final repository = container.read(stockMetaRepositoryProvider);
+        final repository = container.read(stockMetaRepositoryProvider);
 
-      expect(repository, isA<NetworkStockMetaRepository>());
-    });
+        expect(repository, isA<CachingStockMetaRepository>());
+      },
+    );
 
     test('dataSourceMode를 mock으로 override하면 MockStockMetaRepository를 반환한다', () {
       final container = ProviderContainer(
