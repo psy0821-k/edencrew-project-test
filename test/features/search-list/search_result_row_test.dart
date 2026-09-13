@@ -29,6 +29,7 @@ Future<void> _pumpSearchResultRow(
   required String query,
   Set<String>? favoriteSymbols,
   void Function(String symbol)? onToggleFavorite,
+  void Function(String symbol)? onTap,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -42,6 +43,7 @@ Future<void> _pumpSearchResultRow(
           result: result,
           query: query,
           onToggleFavorite: onToggleFavorite ?? (_) {},
+          onTap: onTap ?? (_) {},
         ),
       ),
     ),
@@ -124,6 +126,7 @@ void main() {
                     result: longNameResult,
                     query: '',
                     onToggleFavorite: (_) {},
+                    onTap: (_) {},
                   ),
                 ),
               ),
@@ -155,6 +158,7 @@ void main() {
                     result: _sampleResult,
                     query: '',
                     onToggleFavorite: (_) {},
+                    onTap: (_) {},
                   ),
                 ),
               ),
@@ -221,6 +225,44 @@ void main() {
         await tester.pump();
 
         expect(tappedSymbol, '005930');
+      },
+    );
+
+    testWidgets(
+      'should call onTap with the symbol when the row body is tapped',
+      (WidgetTester tester) async {
+        String? tappedSymbol;
+
+        await _pumpSearchResultRow(
+          tester,
+          result: _sampleResult,
+          query: '',
+          onTap: (symbol) => tappedSymbol = symbol,
+        );
+
+        await tester.tap(find.text('삼성전자'));
+        await tester.pump();
+
+        expect(tappedSymbol, '005930');
+      },
+    );
+
+    testWidgets(
+      'should not call onTap when the star icon is tapped',
+      (WidgetTester tester) async {
+        String? tappedSymbol;
+
+        await _pumpSearchResultRow(
+          tester,
+          result: _sampleResult,
+          query: '',
+          onTap: (symbol) => tappedSymbol = symbol,
+        );
+
+        await tester.tap(find.byType(SvgPicture));
+        await tester.pump();
+
+        expect(tappedSymbol, isNull);
       },
     );
   });

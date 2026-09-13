@@ -17,13 +17,13 @@ const double _metaLineHeight = 14;
 // dimens.rowMinHeight(56)를 최소값으로만 강제해 폰트가 커지면 행이 자연스럽게 늘어나게 한다.
 
 /// 검색 결과 행 하나. 종목명(검색어 일치 구간 하이라이트) + 종목코드 · 시장 + 별 아이콘 표시.
-/// 행 전체 탭 인터랙션(상세 이동)은 이후 이슈(#35)에서 추가.
 class SearchResultRow extends ConsumerWidget {
   const SearchResultRow({
     super.key,
     required this.result,
     required this.query,
     required this.onToggleFavorite,
+    required this.onTap,
   });
 
   /// 표시할 검색 결과 하나.
@@ -34,6 +34,9 @@ class SearchResultRow extends ConsumerWidget {
 
   /// 별 아이콘 탭 콜백. Row는 토글 로직을 모르고 symbol만 전달한다.
   final void Function(String symbol) onToggleFavorite;
+
+  /// 행(별 아이콘 영역 제외) 탭 콜백. symbol만 전달한다.
+  final void Function(String symbol) onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,69 +52,73 @@ class SearchResultRow extends ConsumerWidget {
       color: colors.textPrimary,
     );
 
-    return Container(
-      constraints: BoxConstraints(minHeight: dimens.rowMinHeight),
-      padding: EdgeInsets.symmetric(
-        vertical: dimens.space3,
-        horizontal: dimens.space4,
-      ),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            width: dimens.borderHairline,
-            color: colors.borderSubtle,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => onTap(result.symbol),
+      child: Container(
+        constraints: BoxConstraints(minHeight: dimens.rowMinHeight),
+        padding: EdgeInsets.symmetric(
+          vertical: dimens.space3,
+          horizontal: dimens.space4,
+        ),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              width: dimens.borderHairline,
+              color: colors.borderSubtle,
+            ),
           ),
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text.rich(
-                  _buildNameSpan(result.name, query, baseStyle, colors),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text.rich(
-                  TextSpan(
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontWeight: AppTypography.regular,
-                      fontSize: _metaFontSize,
-                      height: _metaLineHeight / _metaFontSize,
-                      color: colors.textSecondary,
-                    ),
-                    children: [
-                      TextSpan(text: result.symbol),
-                      TextSpan(text: ' · ${result.marketName}'),
-                    ],
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text.rich(
+                    _buildNameSpan(result.name, query, baseStyle, colors),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: dimens.space2),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => onToggleFavorite(result.symbol),
-            child: SvgPicture.asset(
-              isFavorite
-                  ? 'assets/icons/ico_star_filled.svg'
-                  : 'assets/icons/ico_star.svg',
-              width: dimens.iconMd,
-              height: dimens.iconMd,
-              colorFilter: ColorFilter.mode(
-                isFavorite ? colors.favoriteActive : colors.favoriteInactive,
-                BlendMode.srcIn,
+                  Text.rich(
+                    TextSpan(
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontWeight: AppTypography.regular,
+                        fontSize: _metaFontSize,
+                        height: _metaLineHeight / _metaFontSize,
+                        color: colors.textSecondary,
+                      ),
+                      children: [
+                        TextSpan(text: result.symbol),
+                        TextSpan(text: ' · ${result.marketName}'),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            SizedBox(width: dimens.space2),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onToggleFavorite(result.symbol),
+              child: SvgPicture.asset(
+                isFavorite
+                    ? 'assets/icons/ico_star_filled.svg'
+                    : 'assets/icons/ico_star.svg',
+                width: dimens.iconMd,
+                height: dimens.iconMd,
+                colorFilter: ColorFilter.mode(
+                  isFavorite ? colors.favoriteActive : colors.favoriteInactive,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
