@@ -8,6 +8,7 @@ import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_reposit
 import 'package:edencrew_assignment_starter/features/search-list/search_result_row.dart';
 import 'package:edencrew_assignment_starter/pages/search_page.dart';
 import 'package:edencrew_assignment_starter/pages/stock_detail_page.dart';
+import 'package:edencrew_assignment_starter/widgets/search_result_skeleton_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -17,6 +18,7 @@ class _FakeSearchRepository implements SearchRepository {
   _FakeSearchRepository({
     List<SearchResult>? results,
     Object? errorToThrow,
+    this.searchDelay,
   }) : _results = results ?? const [],
        _errorToThrow = errorToThrow;
 
@@ -24,9 +26,16 @@ class _FakeSearchRepository implements SearchRepository {
   final Object? _errorToThrow;
   int callCount = 0;
 
+  /// 지정하면 search가 이 Future가 완료될 때까지 응답하지 않는다.
+  /// (loading 상태를 테스트에서 붙잡아 두기 위해 사용)
+  final Future<void>? searchDelay;
+
   @override
   Future<List<SearchResult>> search(String query) async {
     callCount++;
+    if (searchDelay != null) {
+      await searchDelay;
+    }
     if (_errorToThrow != null) {
       throw _errorToThrow;
     }
@@ -166,6 +175,29 @@ void main() {
         expect(find.textContaining('삼성전자'), findsOneWidget);
         expect(find.textContaining('005930'), findsOneWidget);
         expect(find.textContaining('코스피'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should show skeleton rows while the search request is loading',
+      (WidgetTester tester) async {
+        final completer = Completer<void>();
+        final repository = _FakeSearchRepository(
+          results: const [
+            SearchResult(symbol: '005930', name: '삼성전자', marketName: '코스피'),
+          ],
+          searchDelay: completer.future,
+        );
+
+        await _pumpSearchPage(tester, searchRepository: repository);
+
+        await tester.enterText(find.byType(TextField), '삼성');
+        await tester.pump(const Duration(milliseconds: 350));
+
+        expect(find.byType(SearchResultSkeletonRow), findsWidgets);
+
+        completer.complete();
+        await tester.pump();
       },
     );
 
