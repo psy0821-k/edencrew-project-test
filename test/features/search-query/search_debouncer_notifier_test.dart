@@ -20,6 +20,21 @@ class _RecordingSearchRepository implements SearchRepository {
   }
 }
 
+/// query별로 응답 지연 시간을 다르게 지정할 수 있는 fake.
+/// 네트워크 지연 역전(늦게 보낸 요청이 먼저 응답)을 재현하는 데 사용한다.
+class _DelayedSearchRepository implements SearchRepository {
+  _DelayedSearchRepository(this._delayByQuery);
+
+  final Map<String, Duration> _delayByQuery;
+
+  @override
+  Future<List<SearchResult>> search(String query) async {
+    final delay = _delayByQuery[query] ?? Duration.zero;
+    await Future<void>.delayed(delay);
+    return [SearchResult(symbol: '005930', name: query, marketName: '코스피')];
+  }
+}
+
 void main() {
   group('SearchDebouncerNotifier', () {
     test('2글자 이상 입력 후 300ms 초과 대기하면 정규화된 값으로 search가 1회 호출되고 '
@@ -86,5 +101,31 @@ void main() {
       final state = container.read(searchDebouncerNotifierProvider);
       expect(state.value, isEmpty);
     });
+
+    test(
+      '이전 검색 요청이 새 검색 요청보다 늦게 응답하면 이전 응답으로 상태가 덮어써지지 않고 '
+      '최신 검색 결과가 유지된다',
+      () async {
+        final fake = _DelayedSearchRepository({
+          '삼성': const Duration(milliseconds: 500),
+          '삼성전자': const Duration(milliseconds: 10),
+        });
+        final container = ProviderContainer(
+          overrides: [searchRepositoryProvider.overrideWithValue(fake)],
+        );
+        addTearDown(container.dispose);
+        final notifier = container.read(
+          searchDebouncerNotifierProvider.notifier,
+        );
+
+        notifier.onQueryChanged('삼성');
+        await Future<void>.delayed(const Duration(milliseconds: 350));
+        notifier.onQueryChanged('삼성전자');
+        await Future<void>.delayed(const Duration(milliseconds: 700));
+
+        final state = container.read(searchDebouncerNotifierProvider);
+        expect(state.value!.first.name, '삼성전자');
+      },
+    );
   });
 }

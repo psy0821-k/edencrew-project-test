@@ -5,6 +5,7 @@ import '../../shared/utils/number_formatter.dart';
 import '../../shared/utils/price_change_formatter.dart';
 import '../../theme/theme.dart';
 import '../../widgets/skeleton_box.dart';
+import '../../widgets/stock_identity_column.dart';
 
 // AppDimens에 폰트 크기·행간·스켈레톤 너비 토큰이 없어 Figma 실측값을 로컬 상수로 둔다.
 const double _identityFontSize = 15;
@@ -44,38 +45,10 @@ class WatchlistRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.stockMeta.name,
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontWeight: AppTypography.medium,
-                  fontSize: _identityFontSize,
-                  height: _identityLineHeight / _identityFontSize,
-                  letterSpacing: _identityLetterSpacing,
-                  color: colors.textPrimary,
-                ),
-              ),
-              Text.rich(
-                TextSpan(
-                  style: TextStyle(
-                    fontWeight: AppTypography.regular,
-                    fontSize: _metaFontSize,
-                    height: _metaLineHeight / _metaFontSize,
-                    color: colors.textSecondary,
-                  ),
-                  children: [
-                    TextSpan(text: item.symbol),
-                    TextSpan(
-                      text: ' · ${item.stockMeta.marketName}',
-                      style: TextStyle(fontFamily: AppTypography.fontFamily),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          StockIdentityColumn(
+            name: item.stockMeta.name,
+            symbol: item.symbol,
+            marketName: item.stockMeta.marketName,
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,

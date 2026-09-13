@@ -13,7 +13,10 @@ import '../shared/state/pending_symbols_notifier.dart';
 import '../theme/theme.dart';
 import '../widgets/empty_state_view.dart';
 import '../widgets/favorite_toast.dart';
+import '../widgets/search_result_skeleton_row.dart';
 import 'stock_detail_page.dart';
+
+const int _skeletonRowCount = 6;
 
 const int _minQueryLength = 2;
 // Figma 스펙상 검색바 컨테이너는 60px(8/12 비대칭 padding)이지만, 관심 탭 헤더(WatchlistHeader)가
@@ -140,7 +143,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           },
         );
       },
-      loading: () => const SizedBox.shrink(),
+      loading: () => ListView.builder(
+        itemCount: _skeletonRowCount,
+        itemBuilder: (context, index) => const SearchResultSkeletonRow(),
+      ),
       error: (error, stackTrace) => const EmptyStateView(
         iconAsset: 'assets/icons/ico_search_empty.svg',
         title: '검색 결과가 없습니다',
