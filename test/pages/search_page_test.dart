@@ -7,6 +7,7 @@ import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_provide
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_repository.dart';
 import 'package:edencrew_assignment_starter/features/search-list/search_result_row.dart';
 import 'package:edencrew_assignment_starter/pages/search_page.dart';
+import 'package:edencrew_assignment_starter/pages/stock_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -377,6 +378,49 @@ void main() {
 
         expect(find.text('관심이 등록되었습니다'), findsNothing);
         expect(find.text('관심이 해제되었습니다'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'should navigate to StockDetailPage with the correct symbol when a result row is tapped',
+      (WidgetTester tester) async {
+        const result = SearchResult(
+          symbol: '005930',
+          name: '삼성전자',
+          marketName: '코스피',
+        );
+        final repository = _FakeSearchRepository(results: const [result]);
+
+        await _pumpSearchPage(tester, searchRepository: repository);
+        await _enterQueryAndAwaitResults(tester, '삼성');
+
+        await tester.tap(find.text('삼성전자'));
+        await tester.pumpAndSettle();
+
+        final detailPage = tester.widget<StockDetailPage>(
+          find.byType(StockDetailPage),
+        );
+        expect(detailPage.symbol, '005930');
+      },
+    );
+
+    testWidgets(
+      'should not navigate to StockDetailPage when the star icon is tapped',
+      (WidgetTester tester) async {
+        const result = SearchResult(
+          symbol: '005930',
+          name: '삼성전자',
+          marketName: '코스피',
+        );
+        final repository = _FakeSearchRepository(results: const [result]);
+
+        await _pumpSearchPage(tester, searchRepository: repository);
+        await _enterQueryAndAwaitResults(tester, '삼성');
+
+        await tester.tap(_starIcons);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(StockDetailPage), findsNothing);
       },
     );
   });
