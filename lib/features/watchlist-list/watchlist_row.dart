@@ -6,8 +6,7 @@ import '../../shared/utils/price_change_formatter.dart';
 import '../../theme/theme.dart';
 import '../../widgets/skeleton_box.dart';
 
-const double _rowVerticalPadding = 12;
-const double _rowHorizontalPadding = 16;
+// AppDimens에 폰트 크기·행간·스켈레톤 너비 토큰이 없어 Figma 실측값을 로컬 상수로 둔다.
 const double _identityFontSize = 15;
 const double _identityLineHeight = 20;
 const double _identityLetterSpacing = -0.1;
@@ -25,15 +24,21 @@ class WatchlistRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final dimens = context.dimens;
     final quote = item.quote;
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: _rowVerticalPadding,
-        horizontal: _rowHorizontalPadding,
+      padding: EdgeInsets.symmetric(
+        vertical: dimens.space3,
+        horizontal: dimens.space4,
       ),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(width: 1, color: colors.borderSubtle)),
+        border: Border(
+          bottom: BorderSide(
+            width: dimens.borderHairline,
+            color: colors.borderSubtle,
+          ),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

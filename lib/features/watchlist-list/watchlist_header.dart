@@ -3,10 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../theme/theme.dart';
 
-/// 관심 화면 상단 헤더. `AppDimens`에 헤더 높이 토큰이 없어 Figma 실측값을 로컬 상수로 둔다.
+/// 관심 화면 상단 헤더.
+/// `AppDimens`에 헤더 높이·폰트 크기·행간 토큰이 없어 Figma 실측값을 로컬 상수로 둔다.
 const double _headerHeight = 52;
-const double _headerHorizontalPadding = 16;
-const double _featureGap = 16;
 const double _featureFontSize = 13;
 const double _titleFontSize = 19;
 const double _titleLineHeight = 22;
@@ -32,13 +31,14 @@ class WatchlistHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final dimens = context.dimens;
 
     return SizedBox(
       width: double.infinity,
       height: _headerHeight,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: _headerHorizontalPadding,
+        padding: EdgeInsets.symmetric(
+          horizontal: dimens.space4,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -82,7 +82,7 @@ class WatchlistHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: _featureGap),
+                SizedBox(width: dimens.space4),
                 IconButton(
                   onPressed: onRefreshTap,
                   padding: EdgeInsets.zero,
