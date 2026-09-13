@@ -50,12 +50,12 @@ void main() {
       expect(find.textContaining('+1,000'), findsOneWidget);
     });
 
-    testWidgets('목록의 마지막 행(그 기간의 가장 오래된 데이터)은 등락이 표시되지 않는다', (
+    testWidgets('목록의 마지막 행(그 기간의 가장 오래된 데이터)은 등락이 0으로 표시된다', (
       tester,
     ) async {
       await _pumpTable(tester);
 
-      expect(find.text('-'), findsOneWidget);
+      expect(find.text('0'), findsOneWidget);
     });
   });
 }

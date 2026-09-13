@@ -8,8 +8,8 @@ import '../../theme/theme.dart';
 
 const double _titleFontSize = 15;
 const double _titleLineHeight = 20;
-const double _headerFontSize = 12;
-const double _headerLineHeight = 16;
+const double _headerFontSize = 11;
+const double _headerLineHeight = 14;
 const double _cellFontSize = 13;
 const double _cellLineHeight = 18;
 
@@ -67,7 +67,7 @@ class _HeaderRow extends StatelessWidget {
       fontWeight: AppTypography.regular,
       fontSize: _headerFontSize,
       height: _headerLineHeight / _headerFontSize,
-      color: colors.textTertiary,
+      color: colors.textSecondary,
     );
 
     return Row(
@@ -127,8 +127,8 @@ class _DailyQuoteRow extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            change?.text ?? '-',
-            style: style(color: change?.color ?? colors.textTertiary),
+            change?.text ?? '0',
+            style: style(color: change?.color ?? colors.priceFlatText),
             textAlign: TextAlign.right,
           ),
         ),

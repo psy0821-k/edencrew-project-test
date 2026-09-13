@@ -1,5 +1,14 @@
 # Issue #57 — 기간 탭 + 요약 카드 + 일별 시세 표
 
+## 디자인 수정 (Green 이후 반영)
+
+- 기간 탭: 높이 28px, padding 12px/5px, gap 4px 4등분, Regular 13px
+- 요약 카드: 항목별 surfaceSunken 카드(radius 8px, padding 10px/9px, gap 8px), 3열+2열 그리드
+- 일별 시세 표: "일별 시세" 타이틀 + 컬럼 헤더(날짜/종가/등락/거래량, Regular 11px/행간 14px/text-secondary) 추가
+- 일별 시세 표 등락 UI 표기: `formatDailyQuoteChange`가 `null`(previous 없음)을 반환해도
+  `StockDetailDailyQuoteTable`은 텍스트를 `-` 대신 `0`으로 표시(색상은 `priceFlatText`).
+  `formatDailyQuoteChange` 함수 자체의 null 반환 동작은 변경 없음 — UI 레벨의 표기 규칙만 변경.
+
 ## 시그니처
 
 ### 1. 상태/Provider
