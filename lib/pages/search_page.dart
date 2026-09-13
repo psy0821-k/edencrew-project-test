@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,6 +12,7 @@ import '../features/search-query/search_debouncer_notifier.dart';
 import '../shared/state/pending_symbols_notifier.dart';
 import '../theme/theme.dart';
 import '../widgets/empty_state_view.dart';
+import '../widgets/favorite_toast.dart';
 
 const int _minQueryLength = 2;
 // Figma 스펙상 검색바 컨테이너는 60px(8/12 비대칭 padding)이지만, 관심 탭 헤더(WatchlistHeader)가
@@ -31,10 +34,12 @@ class SearchPage extends ConsumerStatefulWidget {
 class _SearchPageState extends ConsumerState<SearchPage> {
   final _controller = TextEditingController();
   String _rawQuery = ''; // 사용자가 입력한 원본 문자열(정규화 전). 결과없음 문구에 그대로 사용.
+  Timer? _toastTimer;
 
   @override
   void dispose() {
     _controller.dispose();
+    _toastTimer?.cancel();
     super.dispose();
   }
 
@@ -55,23 +60,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           .read(watchlistProvider.notifier)
           .toggleFavorite(symbol);
       if (!mounted) return;
-      _showFavoriteToast(isNowFavorite);
+      _toastTimer = showFavoriteToast(context, isNowFavorite);
     });
-  }
-
-  void _showFavoriteToast(bool isNowFavorite) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            isNowFavorite ? '관심이 등록되었습니다' : '관심이 해제되었습니다',
-          ),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: context.colors.surfaceOverlay,
-        ),
-      );
   }
 
   @override
