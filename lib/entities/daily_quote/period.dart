@@ -14,3 +14,13 @@ enum Period {
     Period.oneYear => 25,
   };
 }
+
+/// 기간 탭 UI가 공유하는 한글 라벨.
+extension PeriodLabel on Period {
+  String get label => switch (this) {
+    Period.oneMonth => '1개월',
+    Period.threeMonths => '3개월',
+    Period.sixMonths => '6개월',
+    Period.oneYear => '1년',
+  };
+}
