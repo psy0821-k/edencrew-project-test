@@ -3,13 +3,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/theme.dart';
 
+// AppDimens에 48px 아이콘 크기 토큰이 없어 Figma 실측값을 로컬 상수로 둔다.
 const double _iconSize = 48;
 const double _titleFontSize = 19;
 const double _titleLineHeight = 22;
 const double _titleLetterSpacing = -0.2;
 const double _captionFontSize = 11;
 const double _captionLineHeight = 14;
-const double _gap = 16;
 
 /// 아이콘 + 타이틀 + 캡션으로 구성된 공용 빈/안내 상태 뷰.
 /// 관심 화면의 빈 상태, 검색 화면의 초기/결과없음 상태가 이 위에서 구성된다.
@@ -33,6 +33,7 @@ class EmptyStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final dimens = context.dimens;
 
     return Center(
       child: Column(
@@ -45,7 +46,7 @@ class EmptyStateView extends StatelessWidget {
             height: _iconSize,
             colorFilter: ColorFilter.mode(colors.textTertiary, BlendMode.srcIn),
           ),
-          const SizedBox(height: _gap),
+          SizedBox(height: dimens.space4),
           Text(
             title,
             textAlign: TextAlign.center,
@@ -58,7 +59,7 @@ class EmptyStateView extends StatelessWidget {
               color: colors.textSecondary,
             ),
           ),
-          const SizedBox(height: _gap),
+          SizedBox(height: dimens.space4),
           Text(
             caption,
             textAlign: TextAlign.center,
