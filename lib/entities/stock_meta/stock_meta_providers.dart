@@ -5,6 +5,7 @@ import '../quote/quote_providers.dart';
 import 'caching_stock_meta_repository.dart';
 import 'mock_stock_meta_repository.dart';
 import 'network_stock_meta_repository.dart';
+import 'stock_meta.dart';
 import 'stock_meta_repository.dart';
 
 /// `dataSourceModeProvider`를 참조해 Mock/Network 구현체 중 하나를 선택합니다.
@@ -16,4 +17,13 @@ final stockMetaRepositoryProvider = Provider<StockMetaRepository>((ref) {
       NetworkStockMetaRepository(ref.watch(apiClientProvider)),
     ),
   };
+});
+
+/// 단일 symbol의 메타데이터를 조회합니다. 헤더/상세 화면 전용.
+final stockMetaProvider = FutureProvider.family<StockMeta, String>((
+  ref,
+  symbol,
+) async {
+  final repository = ref.watch(stockMetaRepositoryProvider);
+  return repository.fetchStockMeta(symbol);
 });
