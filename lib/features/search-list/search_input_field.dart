@@ -5,12 +5,8 @@ import '../../theme/theme.dart';
 
 const double _fontSize = 15;
 const double _lineHeight = 20;
+// AppDimens에 검색 입력창 높이 토큰이 없어 Figma 실측값을 로컬 상수로 둔다.
 const double _fieldHeight = 40;
-const double _horizontalPadding = 12;
-const double _iconGap = 8;
-const double _iconSize = 16;
-const double _borderRadius = 12;
-const double _borderWidth = 1;
 
 /// 검색 입력창 + 우측 지우기(X) 버튼.
 class SearchInputField extends StatelessWidget {
@@ -32,25 +28,29 @@ class SearchInputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final dimens = context.dimens;
 
     return Container(
       height: _fieldHeight,
-      padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
+      padding: EdgeInsets.symmetric(horizontal: dimens.space3),
       decoration: BoxDecoration(
         color: colors.surfaceSunken,
-        borderRadius: BorderRadius.circular(_borderRadius),
-        border: Border.all(color: colors.borderStrong, width: _borderWidth),
+        borderRadius: BorderRadius.circular(dimens.radiusLg),
+        border: Border.all(
+          color: colors.borderStrong,
+          width: dimens.borderHairline,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SvgPicture.asset(
             'assets/icons/ico_search.svg',
-            width: _iconSize,
-            height: _iconSize,
+            width: dimens.iconSm,
+            height: dimens.iconSm,
             colorFilter: ColorFilter.mode(colors.textTertiary, BlendMode.srcIn),
           ),
-          const SizedBox(width: _iconGap),
+          SizedBox(width: dimens.space2),
           Expanded(
             child: Material(
               color: Colors.transparent,
@@ -81,11 +81,11 @@ class SearchInputField extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: _iconGap),
+          SizedBox(width: dimens.space2),
           GestureDetector(
             onTap: onClear,
             behavior: HitTestBehavior.opaque,
-            child: Icon(Icons.clear, size: _iconSize, color: colors.textTertiary),
+            child: Icon(Icons.clear, size: dimens.iconSm, color: colors.textTertiary),
           ),
         ],
       ),
