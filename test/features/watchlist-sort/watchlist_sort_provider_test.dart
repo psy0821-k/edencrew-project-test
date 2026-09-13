@@ -6,14 +6,14 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('watchlistSortCriteriaProvider', () {
     test(
-      'should return SortCriteria.priceDesc when read in its initial state',
+      'should return SortCriteria.nameAsc when read in its initial state',
       () {
         final container = ProviderContainer();
         addTearDown(container.dispose);
 
         final state = container.read(watchlistSortCriteriaProvider);
 
-        expect(state, SortCriteria.priceDesc);
+        expect(state, SortCriteria.nameAsc);
       },
     );
 
@@ -43,7 +43,7 @@ void main() {
           watchlistSortCriteriaProvider,
           (previous, next) {},
         );
-        expect(sub.read(), SortCriteria.priceDesc);
+        expect(sub.read(), SortCriteria.nameAsc);
 
         container.read(watchlistSortCriteriaProvider.notifier).state =
             SortCriteria.changeRateDesc;
