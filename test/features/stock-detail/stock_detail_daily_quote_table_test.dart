@@ -57,5 +57,12 @@ void main() {
 
       expect(find.text('0'), findsOneWidget);
     });
+
+    testWidgets('거래량은 축약 없이 콤마 포맷 원본 숫자로 표시된다', (tester) async {
+      await _pumpTable(tester);
+
+      expect(find.text('12,345,678'), findsOneWidget);
+      expect(find.textContaining('천'), findsNothing);
+    });
   });
 }

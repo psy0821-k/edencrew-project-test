@@ -10,8 +10,13 @@ const double _titleFontSize = 15;
 const double _titleLineHeight = 20;
 const double _headerFontSize = 11;
 const double _headerLineHeight = 14;
-const double _cellFontSize = 13;
-const double _cellLineHeight = 18;
+const double _cellFontSize = 11;
+const double _cellLineHeight = 14;
+const double _rowVerticalPadding = 10;
+const double _borderWidth = 1;
+const double _visibleRowCount = 5;
+const double _rowHeight =
+    _cellLineHeight + _rowVerticalPadding * 2 + _borderWidth;
 
 /// "일별 시세" 타이틀 + 날짜/종가/등락/거래량 컬럼 헤더 + 표. quotes를 최신순
 /// 그대로 렌더링한다.
@@ -41,15 +46,29 @@ class StockDetailDailyQuoteTable extends StatelessWidget {
         SizedBox(height: dimens.space3),
         _HeaderRow(colors: colors),
         SizedBox(height: dimens.space2),
-        for (var i = 0; i < quotes.length; i++)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: dimens.space1),
-            child: _DailyQuoteRow(
-              quote: quotes[i],
-              previous: i + 1 < quotes.length ? quotes[i + 1] : null,
-              colors: colors,
+        SizedBox(
+          height: _rowHeight * _visibleRowCount,
+          child: ListView.builder(
+            itemCount: quotes.length,
+            itemBuilder: (context, i) => Container(
+              height: _rowHeight,
+              padding: EdgeInsets.symmetric(vertical: _rowVerticalPadding),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    width: _borderWidth,
+                    color: colors.borderSubtle,
+                  ),
+                ),
+              ),
+              child: _DailyQuoteRow(
+                quote: quotes[i],
+                previous: i + 1 < quotes.length ? quotes[i + 1] : null,
+                colors: colors,
+              ),
             ),
           ),
+        ),
       ],
     );
   }
@@ -107,7 +126,7 @@ class _DailyQuoteRow extends StatelessWidget {
       fontWeight: AppTypography.regular,
       fontSize: _cellFontSize,
       height: _cellLineHeight / _cellFontSize,
-      color: color ?? colors.textPrimary,
+      color: color ?? colors.textSecondary,
     );
 
     return Row(
@@ -134,8 +153,8 @@ class _DailyQuoteRow extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            NumberFormatter.compactKorean(quote.volume),
-            style: style(color: colors.textSecondary),
+            NumberFormatter.comma(quote.volume),
+            style: style(),
             textAlign: TextAlign.right,
           ),
         ),

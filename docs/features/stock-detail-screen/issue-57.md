@@ -8,6 +8,12 @@
 - 일별 시세 표 등락 UI 표기: `formatDailyQuoteChange`가 `null`(previous 없음)을 반환해도
   `StockDetailDailyQuoteTable`은 텍스트를 `-` 대신 `0`으로 표시(색상은 `priceFlatText`).
   `formatDailyQuoteChange` 함수 자체의 null 반환 동작은 변경 없음 — UI 레벨의 표기 규칙만 변경.
+- 일별 시세 표 데이터 행(td): 날짜/종가/등락/거래량 모두 Regular 11px/행간 14px.
+  날짜·종가·거래량은 `text/secondary`, 등락만 기존 색상(`change.color`/`priceFlatText`) 유지.
+  거래량은 `NumberFormatter.compactKorean` 축약 없이 `NumberFormatter.comma` 원본 숫자로 표시.
+  각 행 상단에 `border-top: 1px solid border/subtle`.
+- 일별 시세 표 스크롤: quotes 전체를 렌더링하되(기간탭이 가져온 데이터 전부),
+  화면에는 5행 높이만큼만 보이도록 고정 높이 컨테이너 + `ListView.builder`로 감싸 내부 스크롤.
 
 ## 시그니처
 
