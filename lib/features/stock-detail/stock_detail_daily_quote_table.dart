@@ -146,7 +146,7 @@ class _DailyQuoteRow extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            change?.text ?? '0',
+            change?.text ?? '-',
             style: style(color: change?.color ?? colors.priceFlatText),
             textAlign: TextAlign.right,
           ),

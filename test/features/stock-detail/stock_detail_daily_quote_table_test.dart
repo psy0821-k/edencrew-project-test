@@ -50,12 +50,40 @@ void main() {
       expect(find.textContaining('+1,000'), findsOneWidget);
     });
 
-    testWidgets('목록의 마지막 행(그 기간의 가장 오래된 데이터)은 등락이 0으로 표시된다', (
+    testWidgets('목록의 마지막 행(그 기간의 가장 오래된 데이터, 계산 불가)은 등락이 -로 표시된다', (
       tester,
     ) async {
       await _pumpTable(tester);
 
+      expect(find.text('-'), findsOneWidget);
+    });
+
+    testWidgets('종가가 이전 거래일과 같은(보합) 행은 등락이 0으로 표시되어 -와 구분된다', (
+      tester,
+    ) async {
+      const flatQuotes = [
+        DailyQuote(
+          date: '20260911',
+          closePrice: 70000,
+          openPrice: 70000,
+          highPrice: 70800,
+          lowPrice: 69900,
+          volume: 12345678,
+        ),
+        DailyQuote(
+          date: '20260910',
+          closePrice: 70000,
+          openPrice: 70000,
+          highPrice: 70800,
+          lowPrice: 69900,
+          volume: 11111111,
+        ),
+      ];
+
+      await _pumpTable(tester, quotes: flatQuotes);
+
       expect(find.text('0'), findsOneWidget);
+      expect(find.text('-'), findsOneWidget);
     });
 
     testWidgets('거래량은 축약 없이 콤마 포맷 원본 숫자로 표시된다', (tester) async {
