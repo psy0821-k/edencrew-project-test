@@ -251,7 +251,9 @@ void main() {
       },
     );
 
-    testWidgets('데이터가 아직 도착하지 않으면 헤더 아래 영역에 스켈레톤이 표시된다', (tester) async {
+    testWidgets('데이터가 아직 도착하지 않으면 본문 영역에 로딩 스피너가 표시되고 헤더는 유지된다', (
+      tester,
+    ) async {
       final quoteDelay = Completer<void>();
       await _pumpStockDetailPage(
         tester,
@@ -262,12 +264,43 @@ void main() {
       );
       await tester.pump();
 
-      final skeletonFinder = find.byWidgetPredicate(
-        (widget) => widget.runtimeType.toString() == 'SkeletonBox',
-      );
-      expect(skeletonFinder, findsWidgets);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(_backButtonFinder(), findsOneWidget);
 
       quoteDelay.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(StockDetailPriceSection),
+          matching: find.textContaining('70,000'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('기간 탭 전환 중에는 스피너가 아니라 기존 SkeletonBox 방식이 유지된다', (
+      tester,
+    ) async {
+      final delayCompleter = Completer<List<DailyQuote>>();
+      final repository = _DelayedDailyQuoteRepository(
+        onCall: (period) {},
+        delayFor: Period.threeMonths,
+        delayCompleter: delayCompleter,
+      );
+
+      await _pumpStockDetailPage(tester, dailyQuoteRepository: repository);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('3개월'));
+      await tester.pump();
+
+      // 탭 전환 로딩은 스피너가 아니라 기존 표/카드가 그대로 유지된다.
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('09.11'), findsOneWidget);
+
+      delayCompleter.complete(_defaultQuotesFor(Period.threeMonths));
       await tester.pumpAndSettle();
     });
 

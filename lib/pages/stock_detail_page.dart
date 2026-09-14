@@ -69,13 +69,7 @@ class StockDetailPage extends ConsumerWidget {
       );
     }
     if (!quote.hasValue || !stockMeta.hasValue) {
-      return Padding(
-        padding: EdgeInsets.symmetric(horizontal: dimens.space4),
-        child: const SkeletonBox(
-          width: double.infinity,
-          height: _bodySkeletonHeight,
-        ),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     final dailyQuoteState = ref.watch(stockDetailDailyQuoteProvider(symbol));
