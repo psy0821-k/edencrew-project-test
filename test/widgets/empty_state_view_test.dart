@@ -66,5 +66,28 @@ void main() {
         expect(find.text('첫째 줄\n둘째 줄'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'should render without overflow when caption is very long',
+      (WidgetTester tester) async {
+        final longCaption = "'${'가' * 200}'와\n일치하는 검색 결과를 찾지 못했습니다.";
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: EmptyStateView(
+              iconAsset: 'assets/icons/ico_search_empty.svg',
+              title: '검색 결과가 없습니다',
+              caption: longCaption,
+            ),
+          ),
+        );
+
+        expect(tester.takeException(), isNull);
+
+        final textWidget = tester.widget<Text>(find.text(longCaption));
+        expect(textWidget.maxLines, 2);
+        expect(textWidget.overflow, TextOverflow.ellipsis);
+      },
+    );
   });
 }
