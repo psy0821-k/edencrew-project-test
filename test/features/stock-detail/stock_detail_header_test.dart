@@ -4,6 +4,7 @@ import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta.dart'
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_providers.dart';
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_repository.dart';
 import 'package:edencrew_assignment_starter/features/stock-detail/stock_detail_header.dart';
+import 'package:edencrew_assignment_starter/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -88,6 +89,22 @@ void main() {
       expect(find.text('삼성전자'), findsOneWidget);
       expect(find.textContaining('005930'), findsOneWidget);
       expect(find.textContaining('코스피'), findsOneWidget);
+    });
+
+    testWidgets('하단에 borderSubtle 색상의 1px 보더가 표시된다', (tester) async {
+      await _pumpHeader(tester);
+
+      final context = tester.element(find.byType(StockDetailHeader));
+      final container = tester.widget<Container>(
+        find.descendant(
+          of: find.byType(StockDetailHeader),
+          matching: find.byType(Container),
+        ),
+      );
+      final decoration = container.decoration as BoxDecoration;
+
+      expect(decoration.border?.bottom.width, 1);
+      expect(decoration.border?.bottom.color, context.colors.borderSubtle);
     });
 
     testWidgets('stockMeta가 loading 상태여도 뒤로가기 버튼은 즉시 표시된다', (tester) async {

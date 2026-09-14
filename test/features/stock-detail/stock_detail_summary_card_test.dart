@@ -50,5 +50,18 @@ void main() {
 
       expect(find.textContaining('1,063조'), findsOneWidget);
     });
+
+    testWidgets('각 항목(시가/고가/저가/거래량/시가총액) 컨테이너 높이는 55px로 고정된다', (
+      tester,
+    ) async {
+      await _pumpSummaryCard(tester);
+
+      final containers = tester
+          .widgetList<Container>(find.byType(Container))
+          .where((c) => c.constraints?.maxHeight == 55)
+          .toList();
+
+      expect(containers.length, 5);
+    });
   });
 }

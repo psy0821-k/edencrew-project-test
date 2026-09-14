@@ -11,6 +11,7 @@ const double _valueLineHeight = 18;
 const double _itemPaddingHorizontal = 10;
 const double _itemPaddingVertical = 9;
 const double _itemRadius = 8;
+const double _itemHeight = 55;
 const double _gap = 8;
 
 /// 시가/고가/저가(그대로) + 거래량/시가총액(NumberFormatter.compactKorean 축약) 카드.
@@ -88,6 +89,7 @@ class _SummaryItem extends StatelessWidget {
     final colors = context.colors;
 
     return Container(
+      height: _itemHeight,
       padding: const EdgeInsets.symmetric(
         horizontal: _itemPaddingHorizontal,
         vertical: _itemPaddingVertical,
