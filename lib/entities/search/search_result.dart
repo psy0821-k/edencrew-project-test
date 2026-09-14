@@ -14,7 +14,4 @@ class SearchResult {
 
   /// 거래소명. 예: `코스피` (StockMetaRepository로 보강됨)
   final String marketName;
-
-  /// 관심/상세 화면과 공유하는 canonical id. `domestic:{symbol}` 형태.
-  String get canonicalId => 'domestic:$symbol';
 }
