@@ -72,6 +72,14 @@ class _StockDetailHeaderState extends ConsumerState<StockDetailHeader> {
     return Container(
       constraints: BoxConstraints(minHeight: dimens.rowMinHeight),
       padding: EdgeInsets.symmetric(horizontal: dimens.space2),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            width: dimens.borderHairline,
+            color: colors.borderSubtle,
+          ),
+        ),
+      ),
       child: Row(
         children: [
           IconButton(
