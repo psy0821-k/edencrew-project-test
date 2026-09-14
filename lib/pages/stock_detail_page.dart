@@ -5,6 +5,7 @@ import '../entities/quote/quote.dart';
 import '../entities/quote/quote_providers.dart';
 import '../entities/stock_meta/stock_meta.dart';
 import '../entities/stock_meta/stock_meta_providers.dart';
+import '../features/stock-detail/stock_detail_candle_chart.dart';
 import '../features/stock-detail/stock_detail_daily_quote_notifier.dart';
 import '../features/stock-detail/stock_detail_daily_quote_table.dart';
 import '../features/stock-detail/stock_detail_error_view.dart';
@@ -19,7 +20,7 @@ import '../widgets/skeleton_box.dart';
 const double _bodySkeletonHeight = 120;
 
 /// 종목 상세 화면. 헤더(뒤로가기/종목명/종목코드·시장/관심 버튼) + 현재가·등락 +
-/// 기간 탭/요약 카드/일별 시세 표를 표시한다. 캔들 차트는 이슈 #58 범위.
+/// 기간 탭/요약 카드/캔들 차트/일별 시세 표를 표시한다.
 class StockDetailPage extends ConsumerWidget {
   const StockDetailPage({required this.symbol, super.key});
 
@@ -99,6 +100,8 @@ class StockDetailPage extends ConsumerWidget {
               height: _bodySkeletonHeight,
             )
           else ...[
+            StockDetailCandleChart(quotes: dailyQuotes),
+            SizedBox(height: dimens.space4),
             StockDetailSummaryCard(
               latestDailyQuote: dailyQuotes.first,
               marketCap: quote.requireValue.marketCap,
