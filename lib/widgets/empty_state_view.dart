@@ -63,6 +63,8 @@ class EmptyStateView extends StatelessWidget {
           Text(
             caption,
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: AppTypography.fontFamily,
               fontWeight: AppTypography.regular,

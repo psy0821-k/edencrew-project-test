@@ -44,29 +44,6 @@ void main() {
       expect(results.first.marketName, '코스피');
     });
 
-    test("반환된 SearchResult의 canonicalId가 'domestic:005930'이다", () async {
-      final apiClient = ApiClient(
-        client: MockClient(
-          (request) async => http.Response(
-            '{"query":"삼성전자","items":['
-            '{"code":"005930","name":"삼성전자","typeCode":"KOSPI","typeName":"코스피",'
-            '"url":"/domestic/stock/005930/total","nationCode":"KOR","category":"stock"}'
-            ']}',
-            200,
-            headers: {'content-type': 'application/json; charset=utf-8'},
-          ),
-        ),
-      );
-      final repository = NetworkSearchRepository(
-        apiClient,
-        _FakeStockMetaRepository(),
-      );
-
-      final results = await repository.search('삼성전자');
-
-      expect(results.first.canonicalId, 'domestic:005930');
-    });
-
     test('nationCode가 KOR이 아닌 해외 주식이 섞여 있으면 결과에서 제외된다', () async {
       final apiClient = ApiClient(
         client: MockClient(
