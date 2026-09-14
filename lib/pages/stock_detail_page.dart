@@ -15,9 +15,6 @@ import '../features/stock-detail/stock_detail_period_tabs.dart';
 import '../features/stock-detail/stock_detail_price_section.dart';
 import '../features/stock-detail/stock_detail_summary_card.dart';
 import '../theme/theme.dart';
-import '../widgets/skeleton_box.dart';
-
-const double _bodySkeletonHeight = 120;
 
 /// 종목 상세 화면. 헤더(뒤로가기/종목명/종목코드·시장/관심 버튼) + 현재가·등락 +
 /// 기간 탭/요약 카드/캔들 차트/일별 시세 표를 표시한다.
@@ -40,6 +37,7 @@ class StockDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final quote = ref.watch(quoteProvider(symbol));
     final stockMeta = ref.watch(stockMetaProvider(symbol));
+    final dailyQuoteState = ref.watch(stockDetailDailyQuoteProvider(symbol));
 
     return Scaffold(
       body: SafeArea(
@@ -47,7 +45,9 @@ class StockDetailPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             StockDetailHeader(symbol: symbol, stockMeta: stockMeta),
-            Expanded(child: _buildBody(context, ref, quote, stockMeta)),
+            Expanded(
+              child: _buildBody(context, ref, quote, stockMeta, dailyQuoteState),
+            ),
           ],
         ),
       ),
@@ -59,6 +59,7 @@ class StockDetailPage extends ConsumerWidget {
     WidgetRef ref,
     AsyncValue<Quote> quote,
     AsyncValue<StockMeta> stockMeta,
+    StockDetailDailyQuoteState dailyQuoteState,
   ) {
     final dimens = context.dimens;
 
@@ -68,41 +69,35 @@ class StockDetailPage extends ConsumerWidget {
         child: StockDetailErrorView(onRetryTap: () => _onRetryTap(ref)),
       );
     }
-    if (!quote.hasValue || !stockMeta.hasValue) {
+
+    final dailyQuotes = dailyQuoteState.quotes;
+    final isInitialLoading =
+        !quote.hasValue || !stockMeta.hasValue || dailyQuotes == null;
+    if (isInitialLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final dailyQuoteState = ref.watch(stockDetailDailyQuoteProvider(symbol));
-    final dailyQuotes = dailyQuoteState.quotes;
-
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: dimens.space4),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StockDetailPriceSection(quote: quote.requireValue),
           SizedBox(height: dimens.space4),
           const StockDetailPeriodTabs(),
-          SizedBox(height: dimens.space2),
+          SizedBox(height: dimens.space4),
           if (dailyQuoteState.error != null)
             StockDetailPeriodErrorBanner(
               onRetryTap: () => _onPeriodRetryTap(ref),
             ),
-          if (dailyQuotes == null)
-            const SkeletonBox(
-              width: double.infinity,
-              height: _bodySkeletonHeight,
-            )
-          else ...[
-            StockDetailCandleChart(quotes: dailyQuotes),
-            SizedBox(height: dimens.space4),
-            StockDetailSummaryCard(
-              latestDailyQuote: dailyQuotes.first,
-              marketCap: quote.requireValue.marketCap,
-            ),
-            SizedBox(height: dimens.space4),
-            StockDetailDailyQuoteTable(quotes: dailyQuotes),
-          ],
+          StockDetailCandleChart(quotes: dailyQuotes),
+          SizedBox(height: dimens.space4),
+          StockDetailSummaryCard(
+            latestDailyQuote: dailyQuotes.first,
+            marketCap: quote.requireValue.marketCap,
+          ),
+          SizedBox(height: dimens.space6),
+          StockDetailDailyQuoteTable(quotes: dailyQuotes),
         ],
       ),
     );

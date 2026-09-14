@@ -12,7 +12,10 @@ import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta_provi
 import 'package:edencrew_assignment_starter/entities/stock_meta/stock_meta_repository.dart';
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_providers.dart';
 import 'package:edencrew_assignment_starter/entities/watchlist/watchlist_repository.dart';
+import 'package:edencrew_assignment_starter/features/stock-detail/stock_detail_candle_chart.dart';
+import 'package:edencrew_assignment_starter/features/stock-detail/stock_detail_period_tabs.dart';
 import 'package:edencrew_assignment_starter/features/stock-detail/stock_detail_price_section.dart';
+import 'package:edencrew_assignment_starter/features/stock-detail/stock_detail_summary_card.dart';
 import 'package:edencrew_assignment_starter/pages/stock_detail_page.dart';
 import 'package:edencrew_assignment_starter/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -280,7 +283,32 @@ void main() {
       );
     });
 
-    testWidgets('기간 탭 전환 중에는 스피너가 아니라 기존 SkeletonBox 방식이 유지된다', (
+    testWidgets('quote/stockMeta가 준비돼도 일별 시세(dailyQuotes)가 아직 없으면 스피너가 유지된다', (
+      tester,
+    ) async {
+      final dailyQuoteDelay = Completer<List<DailyQuote>>();
+      final repository = _DelayedDailyQuoteRepository(
+        onCall: (period) {},
+        delayFor: Period.oneMonth,
+        delayCompleter: dailyQuoteDelay,
+      );
+
+      await _pumpStockDetailPage(tester, dailyQuoteRepository: repository);
+      await tester.pump();
+
+      // quote/stockMeta는 즉시 완료되지만 dailyQuotes가 아직 없으므로 스피너 유지.
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(StockDetailCandleChart), findsNothing);
+
+      dailyQuoteDelay.complete(_defaultQuotesFor(Period.oneMonth));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byType(StockDetailCandleChart), findsOneWidget);
+      expect(find.text('09.11'), findsOneWidget);
+    });
+
+    testWidgets('기간 탭을 전환해도 스피너가 다시 나타나지 않고 기존 표/카드가 유지된다', (
       tester,
     ) async {
       final delayCompleter = Completer<List<DailyQuote>>();
@@ -302,6 +330,54 @@ void main() {
 
       delayCompleter.complete(_defaultQuotesFor(Period.threeMonths));
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('본문 padding은 top 14 / right 16 / bottom 16 / left 16이다', (
+      tester,
+    ) async {
+      await _pumpStockDetailPage(tester);
+      await tester.pumpAndSettle();
+
+      final scrollView = tester.widget<SingleChildScrollView>(
+        find
+            .descendant(
+              of: find.byType(StockDetailPage),
+              matching: find.byType(SingleChildScrollView),
+            )
+            .first,
+      );
+      final padding = scrollView.padding as EdgeInsets;
+
+      expect(padding.top, 14);
+      expect(padding.right, 16);
+      expect(padding.bottom, 16);
+      expect(padding.left, 16);
+    });
+
+    testWidgets('기간 탭과 캔들 차트 사이 간격은 16px이다', (tester) async {
+      await _pumpStockDetailPage(tester);
+      await tester.pumpAndSettle();
+
+      final periodTabsBottom = tester
+          .getBottomLeft(find.byType(StockDetailPeriodTabs))
+          .dy;
+      final chartTop = tester.getTopLeft(find.byType(StockDetailCandleChart)).dy;
+
+      expect(chartTop - periodTabsBottom, 16);
+    });
+
+    testWidgets('요약 카드와 일별 시세 표 사이 간격은 24px이다', (tester) async {
+      await _pumpStockDetailPage(tester);
+      await tester.pumpAndSettle();
+
+      final summaryCardBottom = tester
+          .getBottomLeft(find.byType(StockDetailSummaryCard))
+          .dy;
+      final tableTop = tester
+          .getTopLeft(find.text('일별 시세'))
+          .dy;
+
+      expect(tableTop - summaryCardBottom, 24);
     });
 
     testWidgets('최초 조회가 실패하면 헤더는 유지된 채 그 아래가 에러 뷰로 대체된다', (tester) async {
