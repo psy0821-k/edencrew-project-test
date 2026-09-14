@@ -29,5 +29,14 @@ void main() {
       // 0xFF 0xFF 는 매핑 테이블에 존재하지 않는 조합
       expect(() => eucKr.decode([0xFF, 0xFF]), throwsFormatException);
     });
+
+    test('기존 40자 매핑 테이블에 없던 완성형 한글(삼성전자)을 디코딩하면 원문과 일치한다', () {
+      // '삼성전자' = bbef bcba c0fc c0da (EUC-KR) — 기존 하드코딩 표에 없던 글자들
+      final decoded = eucKr.decode([
+        0xBB, 0xEF, 0xBC, 0xBA, 0xC0, 0xFC, 0xC0, 0xDA,
+      ]);
+
+      expect(decoded, '삼성전자');
+    });
   });
 }
